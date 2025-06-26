@@ -71,21 +71,18 @@ public class AuthServiceImpl implements AuthService {
         }
 
         try {
-            log.info("@@@@-- before create user --@@@");
             User user = createUser(signUpRequestDto);
-            log.info("@@@@-- after create user and before save --@@@");
             User savedUser = userRepository.insert(user);
-            log.info("@@@@-- after save user --@@@");
-
+/* 
             if (savedUser.getId() != null) {
                 try {
                     sendRegistrationVerificationEmail(user);;
                 }catch (Exception e) {
                     removeDisabledUser(savedUser.getId());
-                    throw new ServiceLogicException("Failed to send verification email.Recheck your email or try again later!");
+                    throw new ServiceLogicException("Failed to send verification email. Recheck your email or try again later!");
                 }
             }
-
+*/
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     ApiResponseDto.builder().isSuccess(true)
                             .message("User account created successfully!")
@@ -93,10 +90,11 @@ public class AuthServiceImpl implements AuthService {
             );
 
         }catch(Exception e) {
-            log.info("----@@@@@" + e.getMessage() + "@@@@-----");
+            e.printStackTrace();
             log.error("Registration failed: {}", e.getMessage());
             throw new ServiceLogicException("Registration failed: Something went wrong!");
         }
+
     }
 
     @Override
@@ -246,7 +244,7 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                 .verificationCode(generateVerificationCode())
                 .verificationCodeExpiryTime(calculateCodeExpirationTime())
-                .enabled(false)
+                .enabled(true) //by defaukt it is to be set as false and made to true once email verification is done. changed by sanjeeev to bypass the email verification process
                 .roles(determineRoles(signUpRequestDto.getRoles()))
                 .build();
     }
