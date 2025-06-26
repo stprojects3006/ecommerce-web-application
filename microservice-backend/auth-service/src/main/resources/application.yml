@@ -1,21 +1,22 @@
 spring:
     application:
         name: auth-service
+  ## MongoDB Properties - use docker to host mongodb container for connecting like this
     data:
-        mongodb:
-            host: localhost
-            port: 27017
-            database: purely_auth_service
-    jpa:
-        hibernate:
-            ddl-auto: update
-
+      mongodb:
+        authentication-database: admin
+        username: rootuser
+        password: rootpass
+        database: purely_auth_service
+        port: 27017
+        host: localhost
+        auto-index-creation: true
 server:
     port: 9030
 
 eureka:
     client:
         serviceUrl:
-            defaultZone: http://localhost:8761/eureka/ 
+            defaultZone: http://localhost:8761/eureka/
     instance:
         hostname: localhost
