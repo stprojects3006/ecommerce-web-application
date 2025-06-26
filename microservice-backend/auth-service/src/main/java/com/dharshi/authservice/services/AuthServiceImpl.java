@@ -71,8 +71,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
         try {
+            log.info("@@@@-- before create user --@@@");
             User user = createUser(signUpRequestDto);
+            log.info("@@@@-- after create user and before save --@@@");
             User savedUser = userRepository.insert(user);
+            log.info("@@@@-- after save user --@@@");
 
             if (savedUser.getId() != null) {
                 try {
@@ -90,10 +93,10 @@ public class AuthServiceImpl implements AuthService {
             );
 
         }catch(Exception e) {
+            log.info("----@@@@@" + e.getMessage() + "@@@@-----");
             log.error("Registration failed: {}", e.getMessage());
             throw new ServiceLogicException("Registration failed: Something went wrong!");
         }
-
     }
 
     @Override
