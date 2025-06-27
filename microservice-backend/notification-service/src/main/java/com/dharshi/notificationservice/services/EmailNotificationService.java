@@ -31,16 +31,24 @@ public class EmailNotificationService implements NotificationService {
             String subject = requestDto.getSubject();
             String content = requestDto.getBody();
 
+            log.info("calling -- javaMailSender.createMimeMessage()");
             MimeMessage message = javaMailSender.createMimeMessage();
+            log.info("message is - " + message);
+
+            log.info("calling -- MimeMessageHelper(message);");
             MimeMessageHelper helper = new MimeMessageHelper(message);
 
+            log.info("loading the mime details;");
             helper.setFrom(fromAddress, senderName);
             helper.setTo(toAddress);
             helper.setSubject(subject);
 
             helper.setText(content, true);
+            log.info("loaded the mime details;");
 
+            log.info("sending email");
             javaMailSender.send(message);
+            log.info("sent email and preparing the response");
             return ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponseDto.builder()
                             .isSuccess(true)

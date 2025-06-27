@@ -1,6 +1,6 @@
 import '../auth.css'
-import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {useForm} from 'react-hook-form';
 import AuthService from '../../../api-service/auth.service';
 import Logo from '../../../components/logo/logo';
@@ -8,10 +8,17 @@ import Logo from '../../../components/logo/logo';
 function RegistrationVerfication() {
 
     const { email } = useParams(); 
+    const location = useLocation();
     const navigate = useNavigate();
-    const {register, handleSubmit, formState} = useForm();
+    const {register, handleSubmit, setValue, formState} = useForm();
     const {verifyRegistration, resendVerificationCode, isLoading, error} = AuthService()
 
+    // Autofill the code if passed in navigation state
+    useEffect(() => {
+        if (location.state && location.state.verificationCode) {
+            setValue('code', location.state.verificationCode);
+        }
+    }, [location.state, setValue]);
 
     const onVerify = (data) => {
         verifyRegistration(data.code)

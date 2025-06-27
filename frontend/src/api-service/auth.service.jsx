@@ -41,7 +41,8 @@ function AuthService() {
                 if (response.data.success) {
                     setResponse(true);
                     setError(null)
-                    navigate(`/auth/userRegistrationVerfication/${email}`);
+                    const verificationCode = response.data.response?.verificationCode;
+                    navigate(`/auth/userRegistrationVerfication/${email}`, { state: { verificationCode } });
                 }
             })
             .catch((error) => {

@@ -26,8 +26,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,19 +75,24 @@ public class AuthServiceImpl implements AuthService {
         try {
             User user = createUser(signUpRequestDto);
             User savedUser = userRepository.insert(user);
-/* 
+
+            String verificationCode = null;
             if (savedUser.getId() != null) {
                 try {
-                    sendRegistrationVerificationEmail(user);;
+                    //sendRegistrationVerificationEmail(user);
+                    verificationCode = savedUser.getVerificationCode(); // added by sanjeev 
                 }catch (Exception e) {
                     removeDisabledUser(savedUser.getId());
                     throw new ServiceLogicException("Failed to send verification email. Recheck your email or try again later!");
                 }
             }
-*/
+            // Return verification code in response for autofill (for dev/testing)
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("verificationCode", verificationCode);
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     ApiResponseDto.builder().isSuccess(true)
                             .message("User account created successfully!")
+                            .response(responseData)
                             .build()
             );
 
@@ -94,7 +101,6 @@ public class AuthServiceImpl implements AuthService {
             log.error("Registration failed: {}", e.getMessage());
             throw new ServiceLogicException("Registration failed: Something went wrong!");
         }
-
     }
 
     @Override
@@ -228,13 +234,18 @@ public class AuthServiceImpl implements AuthService {
                 + "<br>Thank you,<br>"
                 + "Purely.";
 
+        log.info("------@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-------");
+        log.info(content);
+        log.info("------@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-------");
         MailRequestDto mail = MailRequestDto.builder()
                 .subject(subject)
                 .body(content)
                 .to(user.getEmail())
                 .build();
 
-        notificationService.sendEmail(mail);
+        log.info("------@@@@@---Reaching till send email function from notification service ------@@@@@---");
+        //notificationService.sendEmail(mail);
+        log.info("------@@@@@---after send email function from notification service----@@@@@@----");
     }
 
     private User createUser(SignUpRequestDto signUpRequestDto) throws RoleNotFoundException {
@@ -244,7 +255,7 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                 .verificationCode(generateVerificationCode())
                 .verificationCodeExpiryTime(calculateCodeExpirationTime())
-                .enabled(true) //by defaukt it is to be set as false and made to true once email verification is done. changed by sanjeeev to bypass the email verification process
+                .enabled(false) 
                 .roles(determineRoles(signUpRequestDto.getRoles()))
                 .build();
     }

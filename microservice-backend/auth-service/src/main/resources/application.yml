@@ -4,13 +4,13 @@ spring:
   ## MongoDB Properties - use docker to host mongodb container for connecting like this
     data:
       mongodb:
-        authentication-database: admin
-        username: rootuser
-        password: rootpass
         database: purely_auth_service
         port: 27017
         host: localhost
-        auto-index-creation: true
+        #authentication-database: admin
+        #username: rootuser
+        #password: rootpass        
+        #auto-index-creation: true
 server:
     port: 9030
 
