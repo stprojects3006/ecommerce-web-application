@@ -48,10 +48,14 @@ public class OrderServiceImpl implements OrderService {
                 throw new ResourceNotFoundException("No items in the cart!");
             }
 
+            log.info("----@@@@@@ - creating order object ---@@@@--");
             Order order = orderRequestDtoToOrder(request, cart);
+            log.info("----@@@@@@ - creating order ---@@@@--");
             order = orderRepository.insert(order);
+            log.info("----@@@@@@ - created order ---@@@@--");
             try {
-                if (order.getId() != null && clearCart(cart, token) && sendConfirmationEmail(user, order)) {
+                if (order.getId() != null && clearCart(cart, token)) { //modified by sanjeev to suppress sending of email notificatgion
+                    //if (order.getId() != null && clearCart(cart, token) && sendConfirmationEmail(user, order)) {
                     return ResponseEntity.ok(
                             ApiResponseDto.builder()
                                     .isSuccess(true)
