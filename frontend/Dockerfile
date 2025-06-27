@@ -1,9 +1,19 @@
-FROM node:18 AS build
-WORKDIR /app
-COPY . .
-RUN npm install && npm run build
+# Development stage
+FROM node:18-alpine
 
-# Production stage
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose port for development server
+EXPOSE 5173
+
+# Start development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"] 

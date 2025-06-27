@@ -20,10 +20,14 @@ public class ApiGatewayApplication {
 	public CorsFilter corsFilter() {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowCredentials(true);
-		config.addAllowedOrigin("http://18.217.148.69:80");
-		config.addAllowedOrigin("http://18.217.148.69");
+		config.addAllowedOrigin("http://localhost");
 		config.addAllowedOrigin("http://localhost:80");
-		config.addAllowedOrigin("http://localhost:5173");
+		config.addAllowedOrigin("http://localhost:8080");
+		config.addAllowedOrigin("http://localhost:5173");		
+		config.addAllowedOrigin("http://18.217.148.69");
+		config.addAllowedOrigin("http://18.217.148.69:80");
+		config.addAllowedOrigin("http://18.217.148.69:8080");
+		config.addAllowedOrigin("http://18.217.148.69:5173");
 		config.addAllowedHeader("*");
 		config.addAllowedMethod("*");
 		config.setMaxAge(3600L);
