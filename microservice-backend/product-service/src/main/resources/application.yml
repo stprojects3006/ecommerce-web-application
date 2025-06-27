@@ -3,9 +3,14 @@ spring:
         name: product-service
     data:
         mongodb:
-            host: 127.0.0.1
+            host: localhost
             port: 27017
             database: purely_product_service
+            #authentication-database: admin
+            #username: rootuser
+            #password: rootpass        
+            #auto-index-creation: true            
+            
     jpa:
         hibernate:
             ddl-auto: update
