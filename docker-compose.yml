@@ -54,7 +54,7 @@ services:
 
   # Service Registry (Eureka)
   service-registry:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_service_registry
     restart: unless-stopped
     ports:
@@ -77,7 +77,7 @@ services:
 
   # API Gateway
   api-gateway:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_api_gateway
     restart: unless-stopped
     ports:
@@ -101,11 +101,11 @@ services:
 
   # Auth Service
   auth-service:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_auth_service
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "8088:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/purely_auth_service?authSource=admin
@@ -128,7 +128,7 @@ services:
 
   # Category Service
   category-service:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_category_service
     restart: unless-stopped
     ports:
@@ -155,7 +155,7 @@ services:
 
   # Product Service
   product-service:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_product_service
     restart: unless-stopped
     ports:
@@ -182,7 +182,7 @@ services:
 
   # Cart Service
   cart-service:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_cart_service
     restart: unless-stopped
     ports:
@@ -209,7 +209,7 @@ services:
 
   # Order Service
   order-service:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_order_service
     restart: unless-stopped
     ports:
@@ -236,7 +236,7 @@ services:
 
   # User Service
   user-service:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_user_service
     restart: unless-stopped
     ports:
@@ -263,7 +263,7 @@ services:
 
   # Notification Service
   notification-service:
-    image: openjdk:17-jre-slim
+    image: openjdk:21-jre-slim
     container_name: purely_notification_service
     restart: unless-stopped
     ports:

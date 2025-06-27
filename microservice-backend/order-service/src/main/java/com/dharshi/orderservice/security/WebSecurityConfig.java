@@ -29,13 +29,27 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:5173");
+
+        // Local development origins
+        configuration.addAllowedOrigin("http://localhost");
+        configuration.addAllowedOrigin("http://localhost:80");
         configuration.addAllowedOrigin("http://localhost:8080");
-        configuration.addAllowedOrigin("http://18.217.148.69:5173");
+        configuration.addAllowedOrigin("http://localhost:5173");
+        
+        // Production origins (HTTP and HTTPS)
+        configuration.addAllowedOrigin("http://18.217.148.69");
+        configuration.addAllowedOrigin("http://18.217.148.69:80");
         configuration.addAllowedOrigin("http://18.217.148.69:8080");
+        configuration.addAllowedOrigin("http://18.217.148.69:5173");
+        configuration.addAllowedOrigin("https://18.217.148.69");
+        configuration.addAllowedOrigin("https://18.217.148.69:80");
+        configuration.addAllowedOrigin("https://18.217.148.69:8080");
+        configuration.addAllowedOrigin("https://18.217.148.69:5173");
+        
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

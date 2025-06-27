@@ -125,6 +125,17 @@ SERVICE_REGISTRY_URL=http://18.217.148.69:8761
 ```bash
 # Build all microservices and frontend
 ./build.sh
+sudo cp ../microservice-backend/service-registry/target/*.jar .
+sudo cp ../microservice-backend/api-gateway/target/*.jar .
+sudo cp ../microservice-backend/auth-service/target/*.jar .
+sudo cp ../microservice-backend/cart-service/target/*.jar .
+sudo cp ../microservice-backend/category-service/target/*.jar .
+sudo cp ../microservice-backend/notification-service/target/*.jar .
+sudo cp ../microservice-backend/order-service/target/*.jar .
+sudo cp ../microservice-backend/product-service/target/*.jar .
+sudo cp ../microservice-backend/user-service/target/*.jar .
+
+
 ```
 
 This will:

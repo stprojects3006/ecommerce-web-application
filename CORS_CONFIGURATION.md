@@ -27,24 +27,15 @@ Nginx acts as the primary CORS handler for the application:
 ```nginx
 # API routes with CORS headers
 location /api/ {
-    proxy_pass http://api_gateway:8081/;
-    
     # CORS headers for production
     add_header Access-Control-Allow-Origin "http://18.217.148.69" always;
+    add_header Access-Control-Allow-Origin "https://18.217.148.69" always;
+    add_header Access-Control-Allow-Origin "http://localhost" always;
+    add_header Access-Control-Allow-Origin "http://localhost:80" always;
+    add_header Access-Control-Allow-Origin "http://localhost:5173" always;
     add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
     add_header Access-Control-Allow-Headers "*" always;
     add_header Access-Control-Allow-Credentials "true" always;
-    
-    # Handle preflight requests
-    if ($request_method = 'OPTIONS') {
-        add_header Access-Control-Allow-Origin "http://18.217.148.69" always;
-        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
-        add_header Access-Control-Allow-Headers "*" always;
-        add_header Access-Control-Allow-Credentials "true" always;
-        add_header Content-Type "text/plain charset=UTF-8";
-        add_header Content-Length 0;
-        return 204;
-    }
 }
 ```
 
@@ -57,12 +48,19 @@ globalcors:
   corsConfigurations:
     '[/**]':
       allowedOrigins:
-        - "http://18.217.148.69"
-        - "http://18.217.148.69:80"
-        - "http://18.217.148.69:8080"
+        # Local development origins
         - "http://localhost"
         - "http://localhost:80"
         - "http://localhost:5173"
+        # Production origins (HTTP and HTTPS)
+        - "http://18.217.148.69"
+        - "http://18.217.148.69:80"
+        - "http://18.217.148.69:8080"
+        - "http://18.217.148.69:5173"
+        - "https://18.217.148.69"
+        - "https://18.217.148.69:80"
+        - "https://18.217.148.69:8080"
+        - "https://18.217.148.69:5173"
       allowedMethods:
         - GET
         - POST
@@ -83,12 +81,23 @@ Each microservice has its own CORS configuration in `WebSecurityConfig.java`:
 @Bean
 public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
+
+    // Local development origins
+    configuration.addAllowedOrigin("http://localhost");
+    configuration.addAllowedOrigin("http://localhost:80");
+    configuration.addAllowedOrigin("http://localhost:8080");
+    configuration.addAllowedOrigin("http://localhost:5173");
+    
+    // Production origins (HTTP and HTTPS)
     configuration.addAllowedOrigin("http://18.217.148.69");
     configuration.addAllowedOrigin("http://18.217.148.69:80");
     configuration.addAllowedOrigin("http://18.217.148.69:8080");
-    configuration.addAllowedOrigin("http://localhost");
-    configuration.addAllowedOrigin("http://localhost:80");
-    configuration.addAllowedOrigin("http://localhost:5173");
+    configuration.addAllowedOrigin("http://18.217.148.69:5173");
+    configuration.addAllowedOrigin("https://18.217.148.69");
+    configuration.addAllowedOrigin("https://18.217.148.69:80");
+    configuration.addAllowedOrigin("https://18.217.148.69:8080");
+    configuration.addAllowedOrigin("https://18.217.148.69:5173");
+    
     configuration.addAllowedMethod("*");
     configuration.addAllowedHeader("*");
     configuration.setAllowCredentials(true);
@@ -108,15 +117,23 @@ public CorsConfigurationSource corsConfigurationSource() {
 
 ## Allowed Origins
 
-### Production (EC2)
+### Local Development
+- `http://localhost`
+- `http://localhost:80`
+- `http://localhost:8080`
+- `http://localhost:5173`
+
+### Production (HTTP)
 - `http://18.217.148.69`
 - `http://18.217.148.69:80`
 - `http://18.217.148.69:8080`
+- `http://18.217.148.69:5173`
 
-### Development
-- `http://localhost`
-- `http://localhost:80`
-- `http://localhost:5173`
+### Production (HTTPS)
+- `https://18.217.148.69`
+- `https://18.217.148.69:80`
+- `https://18.217.148.69:8080`
+- `https://18.217.148.69:5173`
 
 ## Allowed Methods
 - GET
@@ -129,7 +146,10 @@ public CorsConfigurationSource corsConfigurationSource() {
 - All headers (`*`)
 
 ## Credentials
-- `allowCredentials: true` - Allows cookies and authorization headers
+- `allowCredentials: true` (for JWT token transmission)
+
+## Max Age
+- `3600` seconds (1 hour) for preflight caching
 
 ## Service Discovery Configuration
 
@@ -157,130 +177,140 @@ eureka:
 
 ## Frontend Configuration
 
-### Production API Configuration
-```javascript
-// frontend/src/api-service/apiConfig.jsx
-const API_BASE_URL = "http://18.217.148.69/api"
-```
+The frontend is configured to use the API Gateway:
 
-### Development API Configuration
 ```javascript
-// frontend/src/api-service/apiConfig.jsx
-const API_BASE_URL = "http://localhost/api"
+const API_BASE_URL = "http://18.217.148.69/api"
+//const API_BASE_URL = "http://localhost/api" //for local development
+//const API_BASE_URL = "http://18.217.148.69:8081" //for direct API Gateway access
 ```
 
 ## Troubleshooting CORS Issues
 
 ### Common Issues
 
-1. **Port Mismatch**
-   - Ensure API Gateway runs on port 8081
-   - Ensure nginx proxies to the correct port
+1. **Preflight Request Failures**
+   - Ensure OPTIONS method is allowed
+   - Check that preflight headers are properly configured
 
 2. **Origin Not Allowed**
-   - Check if the frontend origin is in the allowed origins list
-   - Verify the protocol (http/https) matches
+   - Verify the requesting origin is in the allowed origins list
+   - Check for typos in origin URLs
 
-3. **Preflight Request Failing**
-   - Ensure OPTIONS method is allowed
-   - Check that preflight response has correct headers
-
-4. **Credentials Not Sent**
+3. **Credentials Issues**
    - Ensure `allowCredentials: true` is set
-   - Check that `Access-Control-Allow-Credentials` header is present
+   - Check that the frontend includes credentials in requests
 
 ### Debugging Steps
 
 1. **Check Browser Console**
    ```javascript
    // Look for CORS errors in browser console
+   console.error('CORS Error:', error);
    ```
 
-2. **Check Network Tab**
-   - Look for failed OPTIONS requests
-   - Check response headers for CORS headers
-
-3. **Test with curl**
+2. **Verify Response Headers**
    ```bash
-   # Test preflight request
-   curl -X OPTIONS -H "Origin: http://18.217.148.69" \
+   # Check response headers for CORS headers
+   curl -H "Origin: http://18.217.148.69" \
         -H "Access-Control-Request-Method: POST" \
         -H "Access-Control-Request-Headers: Content-Type" \
-        -v http://18.217.148.69/api/auth/signin
+        -X OPTIONS \
+        http://18.217.148.69/api/auth/login
    ```
 
-4. **Check Service Logs**
+3. **Test Individual Services**
    ```bash
-   # Check nginx logs
-   docker-compose logs nginx
-   
+   # Test direct service access
+   curl -H "Origin: http://18.217.148.69" \
+        http://18.217.148.69:8081/actuator/health
+   ```
+
+4. **Check Nginx Logs**
+   ```bash
+   # Check nginx access logs
+   docker logs purely_nginx
+   ```
+
+5. **Check API Gateway Logs**
+   ```bash
    # Check API Gateway logs
-   docker-compose logs api-gateway
-   
-   # Check specific service logs
-   docker-compose logs auth-service
+   docker logs purely_api_gateway
+   ```
+
+## Testing CORS Configuration
+
+### Manual Testing
+
+1. **Frontend to API Test**
+   ```javascript
+   fetch('http://18.217.148.69/api/auth/login', {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
+     },
+     credentials: 'include',
+     body: JSON.stringify({
+       username: 'test@example.com',
+       password: 'password'
+     })
+   })
+   .then(response => response.json())
+   .then(data => console.log(data))
+   .catch(error => console.error('CORS Error:', error));
+   ```
+
+2. **Preflight Request Test**
+   ```bash
+   curl -X OPTIONS \
+        -H "Origin: http://18.217.148.69" \
+        -H "Access-Control-Request-Method: POST" \
+        -H "Access-Control-Request-Headers: Content-Type" \
+        -v \
+        http://18.217.148.69/api/auth/login
+   ```
+
+### Automated Testing
+
+1. **CORS Test Script**
+   ```bash
+   # Test all origins
+   for origin in "http://localhost" "http://18.217.148.69" "https://18.217.148.69"; do
+     echo "Testing origin: $origin"
+     curl -H "Origin: $origin" \
+          -H "Access-Control-Request-Method: GET" \
+          -X OPTIONS \
+          http://18.217.148.69/api/health
+   done
    ```
 
 ## Security Considerations
 
-1. **Origin Validation**: Only allow trusted origins
-2. **Method Restriction**: Only allow necessary HTTP methods
-3. **Header Validation**: Be specific about allowed headers
-4. **Credentials**: Only allow credentials when necessary
+1. **Origin Validation**
+   - Only allow specific origins, not wildcards
+   - Validate origins against a whitelist
 
-## Environment-Specific Configuration
+2. **HTTPS Support**
+   - Include HTTPS origins for production
+   - Consider redirecting HTTP to HTTPS
 
-### Production (EC2)
-```javascript
-// frontend/src/api-service/apiConfig.jsx
-const API_BASE_URL = "http://18.217.148.69/api"
-```
+3. **Credential Handling**
+   - Use `allowCredentials: true` only when necessary
+   - Ensure secure transmission of credentials
 
-### Development
-```javascript
-// frontend/src/api-service/apiConfig.jsx
-const API_BASE_URL = "http://localhost/api"
-```
+## Future Enhancements
 
-## Testing CORS Configuration
+1. **Environment-based Configuration**
+   - Use environment variables for origins
+   - Separate development and production configs
 
-1. **Start the application**
-   ```bash
-   ./build.sh
-   ./deploy.sh
-   ```
+2. **Dynamic Origin Management**
+   - Implement origin validation service
+   - Add origin management API
 
-2. **Access the frontend**
-   - Open http://18.217.148.69 in browser
-
-3. **Test API calls**
-   - Try to login/register
-   - Check browser console for CORS errors
-
-4. **Verify monitoring**
-   - Check Prometheus: http://18.217.148.69:9090
-   - Check Grafana: http://18.217.148.69:3000
-
-## EC2-Specific Considerations
-
-### Security Groups
-Ensure the following ports are open in your EC2 security group:
-- Port 80 (HTTP)
-- Port 8081 (API Gateway)
-- Port 8761 (Service Registry)
-- Port 9090 (Prometheus)
-- Port 3000 (Grafana)
-
-### Network Configuration
-- Use private IP (172.31.26.143) for internal service communication
-- Use public IP (18.217.148.69) for external access
-- Configure proper DNS if using a domain name
-
-### SSL/HTTPS
-For production, consider:
-- Setting up SSL certificates
-- Configuring HTTPS
-- Updating CORS origins to include https://
+3. **Enhanced Security**
+   - Implement origin validation middleware
+   - Add rate limiting for CORS requests
 
 ## Summary
 

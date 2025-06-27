@@ -47,6 +47,15 @@ check_node() {
     print_success "Node.js is available"
 }
 
+# Function to check if npm is available
+check_npm() {
+    if ! command -v npm &> /dev/null; then
+        print_error "npm is not installed. Please install npm and try again."
+        exit 1
+    fi
+    print_success "npm is available"
+}
+
 # Function to create necessary directories
 create_directories() {
     print_status "Creating necessary directories..."
@@ -76,17 +85,56 @@ build_microservices() {
     for service in "${services[@]}"; do
         print_status "Building $service..."
         
+        # Check if service directory exists
+        if [ ! -d "./microservice-backend/$service" ]; then
+            print_error "Service directory not found: ./microservice-backend/$service"
+            exit 1
+        fi
+        
         cd "./microservice-backend/$service"
+        print_status "Current directory: $(pwd)"
         
         # Clean and package
-        mvn clean package -DskipTests
+        print_status "Running Maven build for $service..."
+        if ! mvn clean package -DskipTests; then
+            print_error "Failed to build $service"
+            exit 1
+        fi
         
-        # Copy JAR to jars directory
-        cp "target/$service.jar" "../../jars/"
+        # List target directory to see what JAR was created
+        print_status "Checking target directory for $service..."
+        if [ ! -d "./target" ]; then
+            print_error "Target directory not found for $service"
+            exit 1
+        fi
+        
+        ls -la "./target/"
+        
+        # Find the JAR file (handle different naming patterns)
+        jar_file=$(find ./target -name "*.jar" -type f | head -1)
+        
+        if [ -z "$jar_file" ]; then
+            print_error "No JAR file found for $service in target directory"
+            exit 1
+        fi
+        
+        print_status "Found JAR file: $jar_file"
+        
+        # Copy JAR to jars directory with service name
+        print_status "Copying JAR file to jars directory..."
+        cp "$jar_file" "../../jars/$service.jar"
+        
+        if [ $? -eq 0 ]; then
+            print_success "Copied $jar_file to ../../jars/$service.jar"
+        else
+            print_error "Failed to copy JAR file for $service"
+            exit 1
+        fi
         
         cd ../..
         
         print_success "$service built successfully"
+        echo ""
     done
     
     print_success "All microservices built"
@@ -96,27 +144,61 @@ build_microservices() {
 build_frontend() {
     print_status "Building frontend..."
     
+    if [ ! -d "./frontend" ]; then
+        print_error "Frontend directory not found: ./frontend"
+        exit 1
+    fi
+    
     cd ./frontend
+    print_status "Current directory: $(pwd)"
+    
+    # Check if package.json exists
+    if [ ! -f "package.json" ]; then
+        print_error "package.json not found in frontend directory"
+        exit 1
+    fi
     
     # Install dependencies
-    npm install
+    print_status "Installing frontend dependencies..."
+    if ! npm install; then
+        print_error "Failed to install frontend dependencies"
+        exit 1
+    fi
     
     # Build for production
-    npm run build
+    print_status "Building frontend for production..."
+    if ! npm run build; then
+        print_error "Failed to build frontend"
+        exit 1
+    fi
+    
+    # Check if build was successful
+    if [ ! -d "dist" ]; then
+        print_error "Frontend build failed - dist directory not found"
+        exit 1
+    fi
     
     cd ..
     
     print_success "Frontend built successfully"
 }
 
-# Function to update frontend API configuration
+# Function to update frontend API configuration for production
 update_frontend_config() {
-    print_status "Updating frontend API configuration..."
+    print_status "Updating frontend API configuration for production..."
     
-    # Update the API base URL for production
-    sed -i.bak 's|http://localhost/api|http://localhost/api|g' ./frontend/src/api-service/apiConfig.jsx
+    if [ ! -f "./frontend/src/api-service/apiConfig.jsx" ]; then
+        print_warning "Frontend API config file not found, skipping configuration update"
+        return
+    fi
     
-    print_success "Frontend configuration updated"
+    # Create backup
+    cp ./frontend/src/api-service/apiConfig.jsx ./frontend/src/api-service/apiConfig.jsx.bak
+    
+    # Update the API base URL for production (using localhost for local deployment)
+    sed -i.bak 's|http://localhost:8081|http://localhost/api|g' ./frontend/src/api-service/apiConfig.jsx
+    
+    print_success "Frontend configuration updated for production"
 }
 
 # Function to restore frontend config
@@ -125,9 +207,8 @@ restore_frontend_config() {
     
     if [ -f ./frontend/src/api-service/apiConfig.jsx.bak ]; then
         mv ./frontend/src/api-service/apiConfig.jsx.bak ./frontend/src/api-service/apiConfig.jsx
+        print_success "Frontend configuration restored"
     fi
-    
-    print_success "Frontend configuration restored"
 }
 
 # Function to display build information
@@ -147,7 +228,18 @@ display_info() {
     echo "   3. Run ./deploy.sh to start the application"
     echo ""
     echo "📊 JAR Files Created:"
-    ls -la ./jars/
+    if [ -d "./jars" ]; then
+        ls -la ./jars/
+    else
+        echo "   No JAR files found"
+    fi
+    echo ""
+    echo "🌐 Frontend Build:"
+    if [ -d "./frontend/dist" ]; then
+        ls -la ./frontend/dist/
+    else
+        echo "   Frontend build not found"
+    fi
     echo ""
 }
 
@@ -160,22 +252,71 @@ cleanup() {
 # Set up trap for cleanup
 trap cleanup EXIT
 
+# Function to validate build artifacts
+validate_build() {
+    print_status "Validating build artifacts..."
+    
+    # Check JAR files
+    expected_jars=(
+        "service-registry.jar"
+        "api-gateway.jar"
+        "auth-service.jar"
+        "category-service.jar"
+        "product-service.jar"
+        "cart-service.jar"
+        "order-service.jar"
+        "user-service.jar"
+        "notification-service.jar"
+    )
+    
+    missing_jars=()
+    for jar in "${expected_jars[@]}"; do
+        if [ ! -f "./jars/$jar" ]; then
+            missing_jars+=("$jar")
+        fi
+    done
+    
+    if [ ${#missing_jars[@]} -gt 0 ]; then
+        print_warning "Missing JAR files: ${missing_jars[*]}"
+    else
+        print_success "All expected JAR files are present"
+    fi
+    
+    # Check frontend build
+    if [ ! -d "./frontend/dist" ]; then
+        print_warning "Frontend build directory not found"
+    else
+        print_success "Frontend build directory is present"
+    fi
+}
+
 # Main build process
 main() {
     echo "🔨 Starting PURELY E-commerce Application Build..."
     echo ""
     
     # Pre-build checks
+    print_status "Running pre-build checks..."
     check_maven
     check_node
+    check_npm
+    echo ""
     
     # Setup
     create_directories
+    echo ""
     
     # Build
     build_microservices
+    echo ""
+    
     update_frontend_config
     build_frontend
+    echo ""
+    
+    # Validate build
+    validate_build
+    echo ""
     
     # Display information
     display_info
@@ -184,4 +325,4 @@ main() {
 }
 
 # Run main function
-main "$@" 
+main "$@"
