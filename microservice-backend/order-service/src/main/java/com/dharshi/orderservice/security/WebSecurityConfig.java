@@ -42,7 +42,7 @@ public class WebSecurityConfig {
         configuration.addAllowedOrigin("http://18.217.148.69:8080");
         configuration.addAllowedOrigin("http://18.217.148.69:5173");
         configuration.addAllowedOrigin("https://18.217.148.69");
-        configuration.addAllowedOrigin("https://18.217.148.69:80");
+        configuration.addAllowedOrigin("https://18.217.148.69:443");
         configuration.addAllowedOrigin("https://18.217.148.69:8080");
         configuration.addAllowedOrigin("https://18.217.148.69:5173");
         

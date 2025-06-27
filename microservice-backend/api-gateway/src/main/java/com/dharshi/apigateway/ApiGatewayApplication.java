@@ -33,7 +33,7 @@ public class ApiGatewayApplication {
 		config.addAllowedOrigin("http://18.217.148.69:8080");
 		config.addAllowedOrigin("http://18.217.148.69:5173");
 		config.addAllowedOrigin("https://18.217.148.69");
-		config.addAllowedOrigin("https://18.217.148.69:80");
+		config.addAllowedOrigin("https://18.217.148.69:443");
 		config.addAllowedOrigin("https://18.217.148.69:8080");
 		config.addAllowedOrigin("https://18.217.148.69:5173");
 		
