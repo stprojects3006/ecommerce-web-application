@@ -130,7 +130,8 @@ docker-compose ps
 
 ### Grafana Dashboards
 1. Access Grafana at http://localhost:3000
-2. Login with admin/admin
+2. Login with admin/admin (default)
+   changed pwd is = password
 3. Add Prometheus as data source (http://prometheus:9090)
 4. Import dashboards for:
    - Spring Boot metrics

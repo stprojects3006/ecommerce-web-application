@@ -183,10 +183,101 @@
 ## 🔍 Troubleshooting
 
 ### **Port Conflicts**
-If you encounter port conflicts:
-1. Check if ports are already in use: `netstat -tulpn | grep :<port>`
-2. Verify Docker containers are not running: `docker ps`
-3. Check service configuration files
+
+#### **1. Check Port Usage**
+```bash
+# Check all listening ports
+netstat -tulpn | grep LISTEN
+
+# Check specific port (e.g., 8081)
+netstat -tulpn | grep :8081
+
+# Alternative using ss command
+ss -tulpn | grep :8081
+
+# Check Docker container ports
+docker ps --format "table {{.Names}}\t{{.Ports}}"
+```
+
+#### **2. Find Process Using Port**
+```bash
+# Find process ID using port 8081
+lsof -i :8081
+
+# Find process with more details
+fuser -v 8081/tcp
+
+# Kill process using port (replace PID with actual process ID)
+kill -9 <PID>
+
+# Kill all processes using port 8081
+sudo fuser -k 8081/tcp
+```
+
+#### **3. Docker Port Conflicts**
+```bash
+# Check if Docker containers are using ports
+docker ps -a --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
+
+# Stop all containers
+docker-compose down
+
+# Remove containers and networks
+docker-compose down --remove-orphans
+
+# Clean up Docker system
+docker system prune -f
+
+# Check Docker networks
+docker network ls
+docker network inspect <network-name>
+```
+
+#### **4. Service-Specific Port Checks**
+```bash
+# Check API Gateway port
+curl -v http://localhost:8081/actuator/health
+
+# Check Service Registry port
+curl -v http://localhost:8761/actuator/health
+
+# Check Nginx port
+curl -v http://localhost/health
+
+# Check MongoDB port
+telnet localhost 27017
+```
+
+#### **5. Port Conflict Resolution Commands**
+```bash
+# Stop specific service
+docker-compose stop api-gateway
+
+# Restart specific service
+docker-compose restart api-gateway
+
+# Rebuild and restart service
+docker-compose up -d --build api-gateway
+
+# Check service logs for port errors
+docker-compose logs api-gateway | grep -i "port\|bind\|address"
+```
+
+#### **6. Network Configuration Checks**
+```bash
+# Check Docker network configuration
+docker network ls
+docker network inspect backend-network
+
+# Check container network connectivity
+docker exec purely_api_gateway ping product-service
+
+# Check DNS resolution in containers
+docker exec purely_api_gateway nslookup product-service
+
+# Check container IP addresses
+docker inspect purely_api_gateway | grep IPAddress
+```
 
 ### **Service Discovery Issues**
 1. Verify Service Registry is running: `http://localhost:8761`
