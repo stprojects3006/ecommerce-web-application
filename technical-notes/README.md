@@ -40,6 +40,13 @@ This directory contains comprehensive documentation for the PURELY E-commerce mi
   - Load balancer configuration
   - **Port conflict troubleshooting commands**
 
+- **`SSL_SETUP_GUIDE.md`** - SSL Certificate configuration
+  - Self-signed certificates for testing
+  - Let's Encrypt certificates for production
+  - Automatic certificate renewal
+  - SSL troubleshooting and management
+  - Security best practices
+
 ### 🔧 Troubleshooting & Support
 - **`TROUBLESHOOTING_GUIDE.md`** - Comprehensive troubleshooting guide
   - Service connectivity issues
@@ -67,6 +74,7 @@ This directory contains comprehensive documentation for the PURELY E-commerce mi
 | **Troubleshooting issues** | Use `TROUBLESHOOTING_GUIDE.md` |
 | **CORS configuration** | Use `CORS_SETUP_GUIDE.md` |
 | **Port/networking issues** | Use `PORT_SETUP_GUIDE.md` |
+| **SSL certificate setup** | Use `SSL_SETUP_GUIDE.md` |
 | **Complete reference** | Use `COMPREHENSIVE_DEPLOYMENT_GUIDE.md` |
 
 ## 📋 Documentation Maintenance
