@@ -28,21 +28,11 @@ print_error() {
 mkdir -p ./jars
 
 # Services to build
-services=(
-    "service-registry"
-    "api-gateway"
-    "auth-service"
-    "category-service"
-    "product-service"
-    "cart-service"
-    "order-service"
-    "user-service"
-    "notification-service"
-)
+services="service-registry api-gateway auth-service category-service product-service cart-service order-service user-service notification-service"
 
 print_status "Building JAR files without tests or connectivity checks..."
 
-for service in "${services[@]}"; do
+for service in $services; do
     print_status "Building $service..."
     
     if [ ! -d "./microservice-backend/$service" ]; then

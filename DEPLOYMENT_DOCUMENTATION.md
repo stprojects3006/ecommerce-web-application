@@ -55,6 +55,8 @@ This document provides comprehensive documentation for the PURELY E-commerce mic
 
 ## Build and Deployment
 
+## first edit the API_BASE_URL in frontend/src/api-service/apiConfig.jsx with ip address of API server
+
 ### Automated Deployment
 The application includes comprehensive deployment scripts:
 

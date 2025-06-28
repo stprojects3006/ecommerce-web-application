@@ -34,7 +34,7 @@ spring:
             - StripPrefix=1
 
         - id: product-service
-          uri: lb://PRODUCT-SERVICE
+          uri: http://product-service:8083
           predicates:
             - Path=/product-service/**
           filters:
@@ -96,5 +96,13 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://service-registry:8761/eureka/
+    region: default
+    availability-zones:
+      default: default
+    use-dns-for-fetching-service-urls: false
+    eureka-server-d-n-s-name: service-registry
+    eureka-server-port: 8761
   instance:
     prefer-ip-address: true
+    hostname: api-gateway
+    appname: api-gateway

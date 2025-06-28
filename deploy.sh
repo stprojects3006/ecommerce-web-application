@@ -40,7 +40,7 @@ check_docker() {
 
 # Function to check if Docker Compose is available
 check_docker_compose() {
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker-compose >/dev/null 2>&1; then
         print_error "Docker Compose is not installed. Please install it and try again."
         exit 1
     fi
@@ -49,7 +49,7 @@ check_docker_compose() {
 
 # Function to check if Maven is available
 check_maven() {
-    if ! command -v mvn &> /dev/null; then
+    if ! command -v mvn >/dev/null 2>&1; then
         print_error "Maven is not installed. Please install it and try again."
         exit 1
     fi
@@ -85,19 +85,9 @@ check_build_artifacts() {
         exit 1
     fi
     
-    required_jars=(
-        "service-registry.jar"
-        "api-gateway.jar"
-        "auth-service.jar"
-        "category-service.jar"
-        "product-service.jar"
-        "cart-service.jar"
-        "order-service.jar"
-        "user-service.jar"
-        "notification-service.jar"
-    )
+    required_jars="service-registry.jar api-gateway.jar auth-service.jar category-service.jar product-service.jar cart-service.jar order-service.jar user-service.jar notification-service.jar"
     
-    for jar in "${required_jars[@]}"; do
+    for jar in $required_jars; do
         if [ ! -f "./jars/$jar" ]; then
             print_error "Required JAR file not found: $jar"
             print_error "Please run the build process to build all microservices."
@@ -181,7 +171,7 @@ stop_containers() {
 # Function to build and start services
 start_services() {
     print_status "Building and starting services..."
-    
+        
     # Start all services
     print_status "Starting all services..."
     docker-compose up -d --remove-orphans
@@ -197,18 +187,9 @@ check_services() {
     sleep 60
     
     # Check if services are responding
-    services=(
-        "http://localhost:8761"  # Service Registry
-        "http://localhost:8081"  # API Gateway
-        "http://localhost"       # Frontend (Nginx)
-        "http://localhost:9090"  # Prometheus
-        "http://localhost:3000"  # Grafana
-        "http://localhost:9113/metrics"  # Nginx Exporter
-        "http://localhost:9115"  # Blackbox Exporter
-        "http://localhost:9100/metrics"  # Node Exporter
-    )
+    services="http://localhost:8761 http://localhost:8081 http://localhost http://localhost:9090 http://localhost:3000 http://localhost:9113/metrics http://localhost:9115 http://localhost:9100/metrics"
     
-    for service in "${services[@]}"; do
+    for service in $services; do
         if curl -f -s "$service" > /dev/null; then
             print_success "Service is healthy: $service"
         else

@@ -31,7 +31,7 @@ print_error() {
 
 # Function to check if Maven is available
 check_maven() {
-    if ! command -v mvn &> /dev/null; then
+    if ! command -v mvn >/dev/null 2>&1; then
         print_error "Maven is not installed. Please install Maven and try again."
         exit 1
     fi
@@ -40,7 +40,7 @@ check_maven() {
 
 # Function to check if Node.js is available
 check_node() {
-    if ! command -v node &> /dev/null; then
+    if ! command -v node >/dev/null 2>&1; then
         print_error "Node.js is not installed. Please install Node.js and try again."
         exit 1
     fi
@@ -49,7 +49,7 @@ check_node() {
 
 # Function to check if npm is available
 check_npm() {
-    if ! command -v npm &> /dev/null; then
+    if ! command -v npm >/dev/null 2>&1; then
         print_error "npm is not installed. Please install npm and try again."
         exit 1
     fi
@@ -70,19 +70,10 @@ create_directories() {
 build_microservices() {
     print_status "Building microservices..."
     
-    services=(
-        "service-registry"
-        "api-gateway"
-        "auth-service"
-        "category-service"
-        "product-service"
-        "cart-service"
-        "order-service"
-        "user-service"
-        "notification-service"
-    )
+    # Define services array
+    services="service-registry api-gateway auth-service category-service product-service cart-service order-service user-service notification-service"
     
-    for service in "${services[@]}"; do
+    for service in $services; do
         print_status "Building $service..."
         
         # Check if service directory exists
@@ -195,8 +186,8 @@ update_frontend_config() {
     # Create backup
     cp ./frontend/src/api-service/apiConfig.jsx ./frontend/src/api-service/apiConfig.jsx.bak
     
-    # Update the API base URL for production (using localhost for local deployment)
-    sed -i.bak 's|http://localhost:8081|http://localhost/api|g' ./frontend/src/api-service/apiConfig.jsx
+    # Update the API base URL for production (using EC2 IP for deployment)
+    sed -i.bak 's|http://localhost/api|http://18.217.148.69/api|g' ./frontend/src/api-service/apiConfig.jsx
     
     print_success "Frontend configuration updated for production"
 }
@@ -257,71 +248,55 @@ validate_build() {
     print_status "Validating build artifacts..."
     
     # Check JAR files
-    expected_jars=(
-        "service-registry.jar"
-        "api-gateway.jar"
-        "auth-service.jar"
-        "category-service.jar"
-        "product-service.jar"
-        "cart-service.jar"
-        "order-service.jar"
-        "user-service.jar"
-        "notification-service.jar"
-    )
+    expected_jars="service-registry.jar api-gateway.jar auth-service.jar category-service.jar product-service.jar cart-service.jar order-service.jar user-service.jar notification-service.jar"
     
-    missing_jars=()
-    for jar in "${expected_jars[@]}"; do
+    for jar in $expected_jars; do
         if [ ! -f "./jars/$jar" ]; then
-            missing_jars+=("$jar")
+            print_error "Missing JAR file: $jar"
+            return 1
         fi
     done
     
-    if [ ${#missing_jars[@]} -gt 0 ]; then
-        print_warning "Missing JAR files: ${missing_jars[*]}"
-    else
-        print_success "All expected JAR files are present"
-    fi
-    
     # Check frontend build
     if [ ! -d "./frontend/dist" ]; then
-        print_warning "Frontend build directory not found"
-    else
-        print_success "Frontend build directory is present"
+        print_error "Frontend build directory not found"
+        return 1
     fi
+    
+    print_success "All build artifacts validated"
+    return 0
 }
 
-# Main build process
+# Main execution
 main() {
-    echo "🔨 Starting PURELY E-commerce Application Build..."
-    echo ""
+    print_status "Starting PURELY E-commerce Application Build"
+    print_status "============================================="
     
-    # Pre-build checks
-    print_status "Running pre-build checks..."
+    # Check prerequisites
     check_maven
     check_node
     check_npm
-    echo ""
     
-    # Setup
+    # Create directories
     create_directories
-    echo ""
     
-    # Build
-    build_microservices
-    echo ""
-    
+    # Update frontend config for production
     update_frontend_config
+    
+    # Build microservices
+    build_microservices
+    
+    # Build frontend
     build_frontend
-    echo ""
     
     # Validate build
-    validate_build
-    echo ""
-    
-    # Display information
-    display_info
-    
-    print_success "Build completed successfully!"
+    if validate_build; then
+        display_info
+        print_success "Build completed successfully!"
+    else
+        print_error "Build validation failed"
+        exit 1
+    fi
 }
 
 # Run main function

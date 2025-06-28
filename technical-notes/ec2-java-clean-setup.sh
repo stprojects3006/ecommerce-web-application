@@ -37,17 +37,35 @@ echo "Configuring Java 17..."
 sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-17-openjdk-amd64/bin/java 1
 sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac 1
 
-echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' | sudo tee -a /etc/environment
-echo 'export PATH=$JAVA_HOME/bin:$PATH' | sudo tee -a /etc/environment
+# Step 7: Set up environment variables properly
+echo "Setting up environment variables..."
+JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
 
-# Step 7: Install Maven
+# Add to /etc/environment for system-wide availability
+echo "JAVA_HOME=$JAVA_HOME" | sudo tee -a /etc/environment
+
+# Add to ~/.bashrc for current user
+echo "export JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
+echo "export PATH=\$JAVA_HOME/bin:\$PATH" >> ~/.bashrc
+
+# Step 8: Install Maven
 echo "Installing Maven..."
 sudo apt install maven -y
 
-# Step 8: Verify installation
-echo "Verifying installation..."
-source /etc/environment
+# Step 9: Reload environment and verify installation
+echo "Reloading environment and verifying installation..."
+export JAVA_HOME=$JAVA_HOME
+export PATH=$JAVA_HOME/bin:$PATH
+
+# Ensure basic PATH includes standard directories
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+
 java -version
 mvn -version
 
 echo "=== Installation Complete ==="
+echo ""
+echo "IMPORTANT: Please run the following command to reload your shell environment:"
+echo "source ~/.bashrc"
+echo ""
+echo "Or simply start a new terminal session."
