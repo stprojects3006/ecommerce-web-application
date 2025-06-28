@@ -92,6 +92,8 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth ->
                 auth.requestMatchers("/auth/signup").permitAll()
                     .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/actuator/**").permitAll()
+                    .requestMatchers("/actuator/health/**").permitAll()
                     .anyRequest().authenticated()
             );
         http.authenticationProvider(authenticationProvider());

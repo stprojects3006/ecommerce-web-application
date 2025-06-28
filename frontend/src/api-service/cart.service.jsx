@@ -6,9 +6,9 @@ function CartService() {
     const [cart, setCart] = useState({})
     const [cartError, setError] = useState(false);
     const [isProcessingCart, setProcessing] = useState(false);
-    const user = JSON.parse(localStorage.getItem("user"));
 
     const authHeader = () => {
+        const user = JSON.parse(localStorage.getItem("user"));
         return { Authorization: `${user?.type}${user?.token}` };
     }
 
@@ -63,8 +63,36 @@ function CartService() {
         getCartInformation()
     }
 
+    const clearCart = async () => {
+        console.log("Starting cart clear process...")
+        setProcessing(true)
+        try {
+            const response = await axios.delete(`${API_BASE_URL}/cart-service/cart/clear/byId`, {
+                headers: authHeader(),
+                params: {
+                    id: cart.cartId
+                }
+            });
+            
+            console.log("Cart clear response:", response.data)
+            setError(false)
+            setCart({cartItems: [], noOfCartItems: 0, subtotal: 0})
+            console.log("Cart state updated locally")
+            
+            // Refresh cart information to ensure state is updated
+            await getCartInformation()
+            console.log("Cart information refreshed")
+        } catch (error) {
+            console.error("Failed to clear cart:", error)
+            setError(true)
+        }
+        setProcessing(false)
+        console.log("Cart clear process completed")
+    }
+
     const getCartInformation = async () => {
-        if (!user.token) {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user?.token) {
             setCart({})
             setError(false)
             return
@@ -88,7 +116,7 @@ function CartService() {
         getCartInformation()
     }, [])
 
-    return { cart, cartError, isProcessingCart, addItemToCart, updateItemQuantity, removeItemFromCart, getCartInformation };
+    return { cart, cartError, isProcessingCart, addItemToCart, updateItemQuantity, removeItemFromCart, clearCart, getCartInformation };
 
 }
 

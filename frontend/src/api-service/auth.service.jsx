@@ -42,6 +42,14 @@ function AuthService() {
                     setResponse(true);
                     setError(null)
                     const verificationCode = response.data.response?.verificationCode;
+                    
+                    // Store user info temporarily for later use during verification
+                    const tempUserInfo = {
+                        username: userName,
+                        email: email,
+                    };
+                    localStorage.setItem("tempUserInfo", JSON.stringify(tempUserInfo));
+                    
                     navigate(`/auth/userRegistrationVerfication/${email}`, { state: { verificationCode } });
                 }
             })
@@ -64,11 +72,46 @@ function AuthService() {
                     code: verificationCode
                 }
             })
-            .then((response) => {
+            .then(async (response) => {
                 console.log(response.data)
                 if (response.data.success) {
                     setResponse(true);
                     setError(null)
+                    
+                    // Automatically create user in user-service after successful verification
+                    try {
+                        // Get the temporary user info stored during signup
+                        const tempUserInfo = JSON.parse(localStorage.getItem("tempUserInfo"));
+                        if (tempUserInfo) {
+                            // First, log in to get the user ID
+                            const tempPassword = localStorage.getItem("tempPassword");
+                            if (tempPassword) {
+                                const loginResponse = await axios.post(`${API_BASE_URL}/auth-service/auth/signin`, { 
+                                    email: tempUserInfo.email, 
+                                    password: tempPassword
+                                });
+                                
+                                if (loginResponse.data.response) {
+                                    const userInfo = loginResponse.data.response;
+                                    
+                                    // Create user in user-service
+                                    const createUserResult = await createUserInUserService(userInfo);
+                                    console.log("User creation result:", createUserResult);
+                                    
+                                    // Store the user info for the session
+                                    localStorage.setItem("user", JSON.stringify(userInfo));
+                                    
+                                    // Clean up temporary data
+                                    localStorage.removeItem("tempUserInfo");
+                                    localStorage.removeItem("tempPassword");
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Failed to create user in user-service:", err);
+                        // Don't block the verification success, just log the error
+                    }
+                    
                     navigate(`/auth/success-registration`);
                 }
             })
@@ -108,7 +151,23 @@ function AuthService() {
             })
     }
 
-    return {login, save, verifyRegistration, resendVerificationCode, isLoading, response, error};
+    const createUserInUserService = async (user) => {
+        try {
+            const res = await axios.post(
+                `${API_BASE_URL}/user-service/user/create`,
+                {
+                    userId: user.id,
+                    username: user.username,
+                    email: user.email
+                }
+            );
+            return { success: true, message: res.data.message };
+        } catch (err) {
+            return { success: false, message: err.response?.data?.message || err.message };
+        }
+    };
+
+    return {login, save, verifyRegistration, resendVerificationCode, isLoading, response, error, createUserInUserService};
 }
 
 export default AuthService;

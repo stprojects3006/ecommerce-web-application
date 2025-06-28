@@ -1,8 +1,10 @@
 package com.dharshi.userservice.controllers;
 
 import com.dharshi.userservice.dtos.ApiResponseDto;
+import com.dharshi.userservice.dtos.UserDto;
 import com.dharshi.userservice.exceptions.ServiceLogicException;
 import com.dharshi.userservice.exceptions.UserNotFoundException;
+import com.dharshi.userservice.exceptions.UserAlreadyExistsException;
 import com.dharshi.userservice.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,10 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    @PostMapping("/create")
+    ResponseEntity<ApiResponseDto<?>> createUser(@RequestBody UserDto userDto) throws ServiceLogicException, UserAlreadyExistsException {
+        return userService.createUser(userDto);
+    }
 
 }
 

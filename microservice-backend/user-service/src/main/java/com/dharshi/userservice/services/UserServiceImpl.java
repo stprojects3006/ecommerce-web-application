@@ -4,6 +4,7 @@ import com.dharshi.userservice.dtos.ApiResponseDto;
 import com.dharshi.userservice.dtos.UserDto;
 import com.dharshi.userservice.exceptions.ServiceLogicException;
 import com.dharshi.userservice.exceptions.UserNotFoundException;
+import com.dharshi.userservice.exceptions.UserAlreadyExistsException;
 import com.dharshi.userservice.modals.User;
 import com.dharshi.userservice.repositories.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,35 @@ public class UserServiceImpl implements UserService {
             throw new ServiceLogicException("Something went wrong. Try gain later!");
         }
         throw new UserNotFoundException("User not found with id " + id);
+    }
+
+    @Override
+    public ResponseEntity<ApiResponseDto<?>> createUser(UserDto userDto) throws ServiceLogicException, UserAlreadyExistsException {
+        try {
+            if (userRepository.existsById(userDto.getUserId())) {
+                throw new UserAlreadyExistsException("User already exists with id " + userDto.getUserId());
+            }
+            
+            User user = User.builder()
+                    .id(userDto.getUserId())
+                    .username(userDto.getUsername())
+                    .email(userDto.getEmail())
+                    .enabled(true)
+                    .build();
+            
+            User savedUser = userRepository.save(user);
+            
+            return ResponseEntity.ok(ApiResponseDto.builder()
+                    .isSuccess(true)
+                    .response(userToUserDto(savedUser))
+                    .message("User created successfully.")
+                    .build());
+        }catch(UserAlreadyExistsException e) {
+            throw e;
+        }catch(Exception e) {
+            log.error(e.getMessage());
+            throw new ServiceLogicException("Something went wrong. Try again later!");
+        }
     }
 
     private UserDto userToUserDto(User user) {

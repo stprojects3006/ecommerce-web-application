@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # PURELY E-commerce Application Deployment Script
-# This script deploys the entire microservices stack
+# This script builds and deploys the entire microservices stack
 
 set -e  # Exit on any error
 
@@ -47,13 +47,41 @@ check_docker_compose() {
     print_success "Docker Compose is available"
 }
 
+# Function to check if Maven is available
+check_maven() {
+    if ! command -v mvn &> /dev/null; then
+        print_error "Maven is not installed. Please install it and try again."
+        exit 1
+    fi
+    print_success "Maven is available"
+}
+
+# Function to build all microservices
+build_microservices() {
+    print_status "Building all microservices..."
+    
+    # Check if build script exists
+    if [ ! -f "./build-jars-only.sh" ]; then
+        print_error "Build script not found: build-jars-only.sh"
+        exit 1
+    fi
+    
+    # Make build script executable
+    chmod +x ./build-jars-only.sh
+    
+    # Run the build script
+    ./build-jars-only.sh
+    
+    print_success "All microservices built successfully"
+}
+
 # Function to check for required build artifacts
 check_build_artifacts() {
     print_status "Checking for required build artifacts..."
     
     # Check for JAR files
     if [ ! -d "./jars" ]; then
-        print_error "JAR files directory not found. Please run ./build.sh first."
+        print_error "JAR files directory not found. Please run the build process first."
         exit 1
     fi
     
@@ -72,47 +100,75 @@ check_build_artifacts() {
     for jar in "${required_jars[@]}"; do
         if [ ! -f "./jars/$jar" ]; then
             print_error "Required JAR file not found: $jar"
-            print_error "Please run ./build.sh to build all microservices."
+            print_error "Please run the build process to build all microservices."
             exit 1
         fi
     done
     
     # Check for frontend dist
     if [ ! -d "./frontend/dist" ]; then
-        print_error "Frontend dist directory not found. Please run ./build.sh first."
-        exit 1
+        print_warning "Frontend dist directory not found. Building frontend..."
+        build_frontend
     fi
     
     print_success "All build artifacts found"
 }
 
-# Function to create necessary directories
+# Function to build frontend
+build_frontend() {
+    print_status "Building frontend..."
+    
+    if [ ! -d "./frontend" ]; then
+        print_error "Frontend directory not found."
+        exit 1
+    fi
+    
+    cd frontend
+    
+    # Check if node_modules exists, if not install dependencies
+    if [ ! -d "./node_modules" ]; then
+        print_status "Installing frontend dependencies..."
+        npm install
+    fi
+    
+    # Build the frontend
+    print_status "Building frontend for production..."
+    npm run build
+    
+    cd ..
+    
+    print_success "Frontend built successfully"
+}
+
+# Function to create necessary directories and configs
 create_directories() {
     print_status "Creating necessary directories..."
     
-    mkdir -p ./nginx
     mkdir -p ./prometheus
     mkdir -p ./logs
     
-    # Copy nginx config if it doesn't exist
-    if [ ! -f ./nginx/nginx.conf ]; then
-        cp ./nginx.conf ./nginx/nginx.conf
-    fi
-    
-    # Copy prometheus configs if they don't exist
+    # Ensure prometheus configs are in the right place
     if [ ! -f ./prometheus/prometheus.yml ]; then
-        cp ./prometheus.yml ./prometheus/prometheus.yml
+        print_error "Prometheus config not found: ./prometheus/prometheus.yml"
+        exit 1
     fi
     
     if [ ! -f ./prometheus/blackbox.yml ]; then
-        cp ./blackbox.yml ./prometheus/blackbox.yml
+        print_error "Blackbox config not found: ./prometheus/blackbox.yml"
+        exit 1
     fi
     
     if [ ! -f ./prometheus/promtail-config.yml ]; then
-        cp ./promtail-config.yml ./prometheus/promtail-config.yml
+        print_error "Promtail config not found: ./prometheus/promtail-config.yml"
+        exit 1
     fi
     
-    print_success "Directories and configs created"
+    if [ ! -f ./prometheus/blackbox-rules.yml ]; then
+        print_error "Blackbox rules not found: ./prometheus/blackbox-rules.yml"
+        exit 1
+    fi
+    
+    print_success "Directories and configs verified"
 }
 
 # Function to stop existing containers
@@ -126,17 +182,9 @@ stop_containers() {
 start_services() {
     print_status "Building and starting services..."
     
-    # Start core services first
-    print_status "Starting MongoDB and Service Registry..."
-    docker-compose up -d mongodb service-registry
-    
-    # Wait for service registry to be ready
-    print_status "Waiting for Service Registry to be ready..."
-    sleep 30
-    
-    # Start all other services
-    print_status "Starting all other services..."
-    docker-compose up -d
+    # Start all services
+    print_status "Starting all services..."
+    docker-compose up -d --remove-orphans
     
     print_success "All services started"
 }
@@ -180,7 +228,7 @@ display_info() {
     echo "   URL: http://localhost"
     echo ""
     echo "🔧 Backend Services:"
-    echo "   API Gateway: http://localhost:8080"
+    echo "   API Gateway: http://localhost:8081"
     echo "   Service Registry: http://localhost:8761"
     echo ""
     echo "📊 Monitoring:"
@@ -221,6 +269,10 @@ main() {
     # Pre-deployment checks
     check_docker
     check_docker_compose
+    check_maven
+    
+    # Build process
+    build_microservices
     check_build_artifacts
     
     # Setup

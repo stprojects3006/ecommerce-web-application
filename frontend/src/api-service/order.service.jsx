@@ -7,30 +7,42 @@ function OrderService() {
     const [orderError, setError] = useState(null);
     const [isLoading, setLoading] = useState(false);
     const [userOrders, setUserOrders] = useState([])
-    const user = JSON.parse(localStorage.getItem("user"));
     const navigate = useNavigate()
 
     const authHeader = () => {
+        const user = JSON.parse(localStorage.getItem("user"));
         return { Authorization: `${user?.type}${user?.token}` };
     }
 
-    const placeOrder = async ({ fname, lname, address1, address2, city, phone }, cart) => {
+    const placeOrder = async ({ fname, lname, address1, address2, city, phone }, cart, clearCart) => {
         console.log(fname, lname, address1, address2, city, phone, cart)
         setLoading(true)
-        await axios.post(`${API_BASE_URL}/order-service/order/create`,
-            { firstName: fname, lastName: lname, addressLine1: address1, addressLine2: address2, city: city, phoneNo: phone, cartId: cart },
-            { headers: authHeader() }
-        ).then((response) => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/order-service/order/create`,
+                { firstName: fname, lastName: lname, addressLine1: address1, addressLine2: address2, city: city, phoneNo: phone, cartId: cart },
+                { headers: authHeader() }
+            );
+            
             setError(null)
-            console.log(response)
+            console.log("Order placed successfully:", response.data)
+            
+            // Clear the cart after successful order placement
+            if (clearCart) {
+                try {
+                    console.log("Clearing cart...")
+                    await clearCart();
+                    console.log("Cart cleared successfully");
+                } catch (error) {
+                    console.error("Failed to clear cart:", error);
+                }
+            }
+            
             navigate("/order/success")
-        }).catch((error) => {
-            console.log(error)
-            setError(error.response.data.message)
-        });
-
+        } catch (error) {
+            console.log("Order placement failed:", error)
+            setError(error.response?.data?.message || "Failed to place order")
+        }
         setLoading(false)
-
     };
 
     const getOrdersByUser = async () => {

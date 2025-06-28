@@ -11,10 +11,10 @@ const CheckoutForm = () => {
 
     const { register, handleSubmit, formState } = useForm();
     const { isLoading, error, placeOrder } = OrderService();
-    const { cart, cartError, isProcessingCart, getCartInformation } = useContext(CartContext);
+    const { cart, cartError, isProcessingCart, getCartInformation, clearCart } = useContext(CartContext);
 
     const onSubmit = async (data) => {
-        placeOrder(data, cart.cartId)
+        placeOrder(data, cart.cartId, clearCart)
     };
 
     return (

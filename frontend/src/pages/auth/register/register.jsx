@@ -15,6 +15,8 @@ function Register() {
 
 
     const onSubmit = (data) => {
+        // Temporarily store password for use during verification
+        localStorage.setItem("tempPassword", data.password);
         save(data.username, data.email, data.password)
     }
 
