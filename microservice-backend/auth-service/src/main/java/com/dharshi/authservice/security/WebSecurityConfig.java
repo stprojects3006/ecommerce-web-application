@@ -63,6 +63,10 @@ public class WebSecurityConfig {
         configuration.addAllowedOrigin("http://localhost:80");
         configuration.addAllowedOrigin("http://localhost:8080");
         configuration.addAllowedOrigin("http://localhost:5173");
+        configuration.addAllowedOrigin("https://localhost");
+        configuration.addAllowedOrigin("https://localhost:443");
+        configuration.addAllowedOrigin("https://localhost:8080");
+        configuration.addAllowedOrigin("https://localhost:5173");
         
         // Production origins (HTTP and HTTPS)
         configuration.addAllowedOrigin("http://18.217.148.69");

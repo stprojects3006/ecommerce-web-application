@@ -168,34 +168,126 @@ stop_containers() {
     print_success "Existing containers stopped"
 }
 
+# Function to wait for service registry to be healthy
+wait_for_service_registry() {
+    print_status "Waiting for service registry to be fully healthy..."
+    
+    local max_attempts=30
+    local attempt=1
+    local wait_time=10
+    
+    while [ $attempt -le $max_attempts ]; do
+        print_status "Checking service registry health (attempt $attempt/$max_attempts)..."
+        
+        # Check if service registry is responding
+        if curl -f -s "http://localhost:8761/actuator/health" > /dev/null 2>&1; then
+            print_success "Service registry is healthy and responding"
+            
+            # Additional wait to ensure it's fully initialized
+            print_status "Waiting additional 10 seconds for service registry to fully initialize..."
+            sleep 10
+            
+            # Double-check health status
+            if curl -f -s "http://localhost:8761/actuator/health" > /dev/null 2>&1; then
+                print_success "Service registry is fully ready for service registration"
+                return 0
+            else
+                print_warning "Service registry health check failed after additional wait"
+            fi
+        else
+            print_warning "Service registry not ready yet (attempt $attempt/$max_attempts)"
+        fi
+        
+        attempt=$((attempt + 1))
+        sleep $wait_time
+    done
+    
+    print_error "Service registry failed to become healthy after $max_attempts attempts"
+    print_error "Please check service registry logs: docker-compose logs service-registry"
+    exit 1
+}
+
+# Function to start service registry first
+start_service_registry() {
+    print_status "Starting service registry first..."
+    
+    # Start only the service registry
+    docker-compose up -d service-registry
+    
+    print_success "Service registry started"
+}
+
+# Function to start remaining services
+start_remaining_services() {
+    print_status "Starting remaining services..."
+    
+    # Start all other services except service-registry
+    docker-compose up -d api-gateway auth-service category-service product-service cart-service order-service user-service notification-service nginx prometheus grafana promtail blackbox-exporter node-exporter
+    
+    print_success "Remaining services started"
+}
+
 # Function to build and start services
 start_services() {
-    print_status "Building and starting services..."
-        
-    # Start all services
-    print_status "Starting all services..."
-    docker-compose up -d --remove-orphans
+    print_status "Building and starting services with staged deployment..."
     
-    print_success "All services started"
+    # Stage 1: Start service registry first
+    start_service_registry
+    
+    # Stage 2: Wait for service registry to be healthy
+    wait_for_service_registry
+    
+    # Stage 3: Start remaining services
+    start_remaining_services
+    
+    print_success "All services started with staged deployment"
 }
 
 # Function to check service health
 check_services() {
     print_status "Checking service health..."
     
-    # Wait for services to be ready
-    sleep 60
+    # Wait for services to be ready (shorter wait since service registry is already healthy)
+    print_status "Waiting 30 seconds for all services to initialize..."
+    sleep 30
     
-    # Check if services are responding
-    services="http://localhost:8761 http://localhost:8081 http://localhost http://localhost:9090 http://localhost:3000 http://localhost:9113/metrics http://localhost:9115 http://localhost:9100/metrics"
+    # Check if services are responding with more detailed feedback
+    services=(
+        "Service Registry:http://localhost:8761/actuator/health"
+        "API Gateway:http://localhost:8081/actuator/health"
+        "Frontend:http://localhost"
+        "Prometheus:http://localhost:9090"
+        "Grafana:http://localhost:3000"
+        "Nginx Exporter:http://localhost:9113/metrics"
+        "Blackbox Exporter:http://localhost:9115"
+        "Node Exporter:http://localhost:9100/metrics"
+    )
     
-    for service in $services; do
-        if curl -f -s "$service" > /dev/null; then
-            print_success "Service is healthy: $service"
+    local healthy_count=0
+    local total_services=${#services[@]}
+    
+    for service_info in "${services[@]}"; do
+        IFS=':' read -r service_name service_url <<< "$service_info"
+        
+        print_status "Checking $service_name..."
+        
+        if curl -f -s "$service_url" > /dev/null 2>&1; then
+            print_success "$service_name is healthy"
+            ((healthy_count++))
         else
-            print_warning "Service may not be ready yet: $service"
+            print_warning "$service_name may not be ready yet"
         fi
     done
+    
+    print_status "Health check summary: $healthy_count/$total_services services are healthy"
+    
+    if [ $healthy_count -eq $total_services ]; then
+        print_success "All services are healthy and ready!"
+    else
+        print_warning "Some services may still be starting up. This is normal for the first deployment."
+        print_status "You can check service status with: docker-compose ps"
+        print_status "View logs with: docker-compose logs -f"
+    fi
 }
 
 # Function to display access information

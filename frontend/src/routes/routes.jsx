@@ -15,6 +15,7 @@ const Login = lazy(() => import('../pages/auth/login/login.jsx'))
 const Register = lazy(() => import('../pages/auth/register/register.jsx'))
 const RegistrationVerfication = lazy(() => import('../pages/auth/register/registration.verification.jsx'))
 const RegistrationSuccessful = lazy(() => import('../pages/auth/register/registration.success.jsx'))
+const FlashSale = lazy(() => import('../pages/flash-sale/flash-sale.jsx'))
 
 function AppRoutes() {
 
@@ -35,6 +36,7 @@ function AppRoutes() {
                 <Route path="/" element={<Home />} />
                 <Route path="/products/:category" element={<Products />} />
                 <Route path="/search/:search" element={<Search />} />
+                <Route path="/flash-sale" element={<FlashSale />} />
                 <Route path="*" element={<NotFound />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="/auth/login" element={<Login />} />

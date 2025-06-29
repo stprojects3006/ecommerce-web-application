@@ -1,0 +1,319 @@
+/* Queue-it Overlay Styles */
+.queue-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.queue-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.queue-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  text-align: center;
+}
+
+.queue-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.queue-logo svg {
+  color: white;
+}
+
+.queue-event {
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Content */
+.queue-content {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.queue-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.queue-status h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.queue-status p {
+  margin: 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Queue Position */
+.queue-position {
+  width: 100%;
+}
+
+.position-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.position-number,
+.wait-time,
+.time-in-queue {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.value {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 18px;
+}
+
+/* Progress Bar */
+.queue-progress {
+  width: 100%;
+  margin: 24px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+/* Queue Message */
+.queue-message {
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.queue-message p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #1976d2;
+}
+
+.queue-message p:last-child {
+  margin-bottom: 0;
+}
+
+/* Error State */
+.queue-status.error {
+  color: #d32f2f;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.retry-button {
+  background: #d32f2f;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background: #b71c1c;
+}
+
+/* Footer */
+.queue-footer {
+  background: #f8f9fa;
+  padding: 20px 24px;
+  border-top: 1px solid #e9ecef;
+  text-align: center;
+}
+
+.queue-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+.bypass-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: background-color 0.2s;
+}
+
+.bypass-button:hover {
+  background: #5a6268;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .queue-container {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .queue-content {
+    padding: 24px 16px;
+  }
+  
+  .queue-header {
+    padding: 20px 16px;
+  }
+  
+  .position-info {
+    gap: 12px;
+  }
+  
+  .position-number,
+  .wait-time,
+  .time-in-queue {
+    padding: 10px 12px;
+  }
+  
+  .value {
+    font-size: 16px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .queue-container {
+    background: #1a1a1a;
+    color: white;
+  }
+  
+  .queue-status h2 {
+    color: white;
+  }
+  
+  .queue-status p {
+    color: #ccc;
+  }
+  
+  .position-number,
+  .wait-time,
+  .time-in-queue {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+  
+  .label {
+    color: #ccc;
+  }
+  
+  .queue-message {
+    background: #1e3a5f;
+    border-color: #2d5a8b;
+  }
+  
+  .queue-message p {
+    color: #90caf9;
+  }
+  
+  .queue-footer {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+  
+  .queue-info p {
+    color: #999;
+  }
+} 

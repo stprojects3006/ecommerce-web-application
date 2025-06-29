@@ -1,0 +1,131 @@
+{
+  "test_environment": {
+    "name": "Queue-it Integration Testing",
+    "version": "1.0.0",
+    "description": "Comprehensive functional testing for Queue-it integration"
+  },
+  "urls": {
+    "base_url": "http://localhost:8081",
+    "frontend_url": "http://localhost:5173",
+    "grafana_url": "http://localhost:3000",
+    "prometheus_url": "http://localhost:9090"
+  },
+  "credentials": {
+    "grafana_api_key": "your-grafana-api-key",
+    "admin_username": "admin",
+    "admin_password": "admin"
+  },
+  "timeouts": {
+    "test_timeout": 30,
+    "page_load_timeout": 10,
+    "api_timeout": 15,
+    "queue_timeout": 60
+  },
+  "retry_config": {
+    "max_retries": 3,
+    "retry_delay": 2,
+    "backoff_factor": 2
+  },
+  "queue_events": [
+    {
+      "name": "flash_sale",
+      "event_id": "flash-sale-2024",
+      "trigger_url": "/flash-sale",
+      "expected_queue_size": 1500,
+      "expected_wait_time": 15
+    },
+    {
+      "name": "black_friday",
+      "event_id": "black-friday-2024",
+      "trigger_url": "/black-friday",
+      "expected_queue_size": 5000,
+      "expected_wait_time": 30
+    },
+    {
+      "name": "high_traffic",
+      "event_id": "high-traffic-protection",
+      "trigger_url": "/products",
+      "expected_queue_size": 800,
+      "expected_wait_time": 8
+    },
+    {
+      "name": "checkout",
+      "event_id": "checkout-protection",
+      "trigger_url": "/order/checkout",
+      "expected_queue_size": 200,
+      "expected_wait_time": 5
+    }
+  ],
+  "performance": {
+    "concurrent_users": 10,
+    "test_duration": 300,
+    "ramp_up_time": 60,
+    "target_rps": 100
+  },
+  "browsers": [
+    {
+      "name": "chrome",
+      "version": "latest",
+      "headless": true
+    },
+    {
+      "name": "firefox",
+      "version": "latest",
+      "headless": true
+    },
+    {
+      "name": "safari",
+      "version": "latest",
+      "headless": true
+    }
+  ],
+  "mobile_devices": [
+    {
+      "name": "iPhone 12",
+      "width": 390,
+      "height": 844,
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1"
+    },
+    {
+      "name": "Samsung Galaxy S21",
+      "width": 360,
+      "height": 800,
+      "user_agent": "Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36"
+    }
+  ],
+  "api_endpoints": {
+    "health": "/api/queueit/health",
+    "status": "/api/queueit/status/{event_id}",
+    "enqueue": "/api/queueit/enqueue",
+    "position": "/api/queueit/position/{event_id}",
+    "stats": "/api/queueit/stats/{event_id}"
+  },
+  "grafana": {
+    "dashboards": {
+      "api_performance": "queueit-api-performance",
+      "frontend_metrics": "queueit-frontend-metrics",
+      "error_tracking": "queueit-error-tracking",
+      "load_testing": "queueit-load-testing"
+    },
+    "metrics": {
+      "response_time": "queueit_api_response_time_seconds",
+      "throughput": "queueit_api_requests_total",
+      "error_rate": "queueit_api_errors_total",
+      "queue_size": "queueit_queue_size",
+      "wait_time": "queueit_wait_time_seconds"
+    }
+  },
+  "reporting": {
+    "output_dir": "./reports",
+    "html_report": true,
+    "json_report": true,
+    "junit_report": true,
+    "screenshots": true,
+    "videos": false
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} | {message}",
+    "file": "./reports/test.log"
+  }
+} 

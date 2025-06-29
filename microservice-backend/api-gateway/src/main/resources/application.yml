@@ -71,6 +71,10 @@ spring:
               - "http://localhost"
               - "http://localhost:80"
               - "http://localhost:5173"
+              - "https://localhost"
+              - "https://localhost:443"
+              - "https://localhost:8080"
+              - "https://localhost:5173"
               # Production origins (HTTP and HTTPS)
               - "http://18.217.148.69"
               - "http://18.217.148.69:80"
@@ -91,6 +95,14 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
+# Queue-it Configuration
+queueit:
+  customer-id: ${QUEUE_IT_CUSTOMER_ID:futuraforge}
+  secret-key: ${QUEUE_IT_SECRET_KEY:your-secret-key}
+  api-key: ${QUEUE_IT_API_KEY:your-api-key}
+  queue-domain: ${QUEUE_IT_QUEUE_DOMAIN:futuraforge.queue-it.net}
+  enabled: ${QUEUE_IT_ENABLED:true}
+  debug: ${QUEUE_IT_DEBUG:false}
 
 eureka:
   client:
