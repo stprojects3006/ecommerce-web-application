@@ -1,0 +1,75 @@
+# PURELY E-commerce Application - Production Environment Configuration
+# Copy this file to .env and update with your production values
+
+# MongoDB Configuration
+MONGO_INITDB_ROOT_USERNAME=admin
+MONGO_INITDB_ROOT_PASSWORD=your-secure-production-password
+
+# Email Configuration (for notification service)
+SPRING_MAIL_USERNAME=your-production-email@gmail.com
+SPRING_MAIL_PASSWORD=your-app-specific-password
+
+# JWT Configuration
+JWT_SECRET=your-super-secure-jwt-secret-key-for-production
+JWT_EXPIRATION=86400000
+
+# Application URLs (Production)
+FRONTEND_URL=https://18.217.148.69
+API_BASE_URL=https://18.217.148.69/api
+SERVICE_REGISTRY_URL=http://18.217.148.69:8761
+
+# Grafana Configuration
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=your-secure-grafana-password
+
+# SSL Configuration
+SSL_DOMAIN=18.217.148.69
+SSL_EMAIL=your-ssl-email@example.com
+
+# Production Performance Settings
+JAVA_OPTS=-Xms1g -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication
+NODE_ENV=production
+
+# Security Settings
+CORS_ORIGIN=https://18.217.148.69
+SECURE_COOKIES=true
+HTTPS_ONLY=true
+
+# Monitoring Settings
+PROMETHEUS_RETENTION=200h
+GRAFANA_SESSION_TIMEOUT=24h
+
+# Database Settings
+MONGODB_MAX_CONNECTIONS=100
+MONGODB_CONNECTION_TIMEOUT=30000
+
+# API Rate Limiting
+API_RATE_LIMIT=20
+LOGIN_RATE_LIMIT=10
+GENERAL_RATE_LIMIT=30
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FILE_PATH=/var/log/purely-app
+LOG_RETENTION_DAYS=30
+
+# Backup Configuration
+BACKUP_ENABLED=true
+BACKUP_SCHEDULE=0 2 * * *
+BACKUP_RETENTION_DAYS=7
+BACKUP_PATH=/opt/backups
+
+# Health Check Settings
+HEALTH_CHECK_INTERVAL=30s
+HEALTH_CHECK_TIMEOUT=10s
+HEALTH_CHECK_RETRIES=3
+
+# SSL Certificate Settings
+SSL_CERT_PATH=/etc/letsencrypt/live/18.217.148.69
+SSL_CERT_EMAIL=your-ssl-email@example.com
+
+# Queue-it Integration (for future use)
+QUEUEIT_ENABLED=false
+QUEUEIT_CUSTOMER_ID=your-queueit-customer-id
+QUEUEIT_SECRET_KEY=your-queueit-secret-key
+QUEUEIT_DOMAIN=your-queueit-domain 

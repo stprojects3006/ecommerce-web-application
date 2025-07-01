@@ -4,7 +4,7 @@ spring:
   ## MongoDB Properties - use docker to host mongodb container for connecting like this
     data:
       mongodb:
-        uri: localhost://admin:password@mongodb:27017/purely_auth_service?authSource=admin
+        uri: mongodb://admin:password@mongodb:27017/purely_auth_service?authSource=admin
         #authentication-database: admin
         #username: admin
         #password: password
@@ -13,7 +13,7 @@ spring:
         #host: localhost
         #auto-index-creation: true        
 server:
-    port: 8081
+    port: 9030
 
 eureka:
     client:

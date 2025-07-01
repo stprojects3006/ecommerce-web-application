@@ -1,5 +1,6 @@
 package com.dharshi.apigateway.controllers;
 
+import com.queueit.connector.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +14,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.UUID;
 import java.time.Instant;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/queueit")
@@ -39,6 +43,67 @@ public class QueueItController {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final KnownUser knownUser = new KnownUser();
+
+    /**
+     * Validate Queue-It token and handle queue logic
+     */
+    @PostMapping("/validate")
+    public ResponseEntity<Map<String, Object>> validateQueueToken(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @RequestBody Map<String, Object> requestBody) {
+        
+        try {
+            String eventId = (String) requestBody.get("eventId");
+            String queueitToken = (String) requestBody.get("queueitToken");
+            String originalUrl = (String) requestBody.get("originalUrl");
+            
+            logger.info("Validating Queue-It token for event: {}", eventId);
+            
+            // Create Queue-It request
+            IHttpRequestProvider httpRequestProvider = new HttpRequestProvider(request);
+            IHttpResponseProvider httpResponseProvider = new HttpResponseProvider(response);
+            
+            // Validate the token using Queue-It connector
+            ValidateResult result = knownUser.validateRequestByLocalEvent(
+                originalUrl,
+                queueitToken,
+                eventId,
+                customerId,
+                secretKey,
+                httpRequestProvider,
+                httpResponseProvider
+            );
+            
+            Map<String, Object> responseMap = new HashMap<>();
+            
+            if (result.doRedirect()) {
+                // User needs to be redirected to queue
+                responseMap.put("redirect", true);
+                responseMap.put("redirectUrl", result.getRedirectUrl());
+                responseMap.put("eventId", eventId);
+                logger.info("User redirected to queue: {}", result.getRedirectUrl());
+            } else {
+                // User can proceed
+                responseMap.put("redirect", false);
+                responseMap.put("eventId", eventId);
+                responseMap.put("queueId", result.getQueueId());
+                responseMap.put("placeInQueue", result.getPlaceInQueue());
+                logger.info("User can proceed, queueId: {}", result.getQueueId());
+            }
+            
+            responseMap.put("timestamp", Instant.now().toString());
+            return ResponseEntity.ok(responseMap);
+            
+        } catch (Exception e) {
+            logger.error("Error validating Queue-It token: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to validate queue token");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
 
     /**
      * Check if a queue is active for a specific event
@@ -48,29 +113,49 @@ public class QueueItController {
         try {
             logger.info("Checking queue status for event: {}", eventId);
             
-            // For demo purposes, we'll simulate queue status
-            // In production, this would call Queue-it's API
-            Map<String, Object> response = new HashMap<>();
+            // Call Queue-It API to get event status
+            String apiUrl = String.format("https://%s/status/integrationconfig/secure/%s", 
+                queueDomain, customerId);
             
-            // Simulate different queue states based on event
-            if (eventId.contains("flash-sale") || eventId.contains("black-friday")) {
-                response.put("isActive", true);
-                response.put("queueSize", 1500);
-                response.put("estimatedWaitTime", 15);
-            } else if (eventId.contains("high-traffic")) {
-                response.put("isActive", Math.random() > 0.5); // Random activation
-                response.put("queueSize", 800);
-                response.put("estimatedWaitTime", 8);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", apiKey);
+            headers.set("Host", "queue-it.net");
+            
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> apiResponse = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class);
+            
+            if (apiResponse.getStatusCode().is2xxSuccessful()) {
+                JsonNode config = objectMapper.readTree(apiResponse.getBody());
+                
+                // Find the specific event configuration
+                boolean isActive = false;
+                int queueSize = 0;
+                int estimatedWaitTime = 0;
+                
+                if (config.has("Events")) {
+                    for (JsonNode event : config.get("Events")) {
+                        if (event.has("EventId") && event.get("EventId").asText().equals(eventId)) {
+                            isActive = event.has("IsActive") ? event.get("IsActive").asBoolean() : false;
+                            queueSize = event.has("QueueSize") ? event.get("QueueSize").asInt() : 0;
+                            estimatedWaitTime = event.has("EstimatedWaitTime") ? event.get("EstimatedWaitTime").asInt() : 0;
+                            break;
+                        }
+                    }
+                }
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("isActive", isActive);
+                response.put("queueSize", queueSize);
+                response.put("estimatedWaitTime", estimatedWaitTime);
+                response.put("eventId", eventId);
+                response.put("timestamp", Instant.now().toString());
+                
+                return ResponseEntity.ok(response);
             } else {
-                response.put("isActive", false);
-                response.put("queueSize", 0);
-                response.put("estimatedWaitTime", 0);
+                throw new RuntimeException("Failed to get queue status from Queue-It API");
             }
             
-            response.put("eventId", eventId);
-            response.put("timestamp", Instant.now().toString());
-            
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error checking queue status for event {}: {}", eventId, e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
@@ -84,39 +169,37 @@ public class QueueItController {
      * Enqueue a user for a specific event
      */
     @PostMapping("/enqueue")
-    public ResponseEntity<Map<String, Object>> enqueueUser(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, Object>> enqueueUser(
+            HttpServletRequest request,
+            @RequestBody Map<String, Object> requestBody) {
+        
         try {
-            String eventId = (String) request.get("eventId");
-            String targetUrl = (String) request.get("targetUrl");
-            String userAgent = (String) request.get("userAgent");
-            String ipAddress = (String) request.get("ipAddress");
+            String eventId = (String) requestBody.get("eventId");
+            String targetUrl = (String) requestBody.get("targetUrl");
+            String userAgent = (String) requestBody.get("userAgent");
+            String ipAddress = (String) requestBody.get("ipAddress");
             
             logger.info("Enqueuing user for event: {}, IP: {}", eventId, ipAddress);
             
-            // Generate a unique queue token
-            String queueToken = UUID.randomUUID().toString();
+            // Create Queue-It request
+            IHttpRequestProvider httpRequestProvider = new HttpRequestProvider(request);
             
-            // For demo purposes, we'll simulate queue behavior
-            // In production, this would integrate with Queue-it's API
+            // Generate redirect URL using Queue-It connector
+            String redirectUrl = knownUser.resolveUserInQueue(
+                targetUrl,
+                eventId,
+                customerId,
+                secretKey,
+                httpRequestProvider
+            );
+            
             Map<String, Object> response = new HashMap<>();
-            
-            // Simulate queue behavior based on event type
-            if (eventId.contains("flash-sale") || eventId.contains("black-friday")) {
-                // High traffic events - redirect to Queue-it
-                String redirectUrl = String.format("https://%s/%s?c=%s&e=%s&t=%s",
-                    queueDomain, customerId, customerId, eventId, queueToken);
-                response.put("redirectUrl", redirectUrl);
-            } else {
-                // Lower traffic events - provide queue token for polling
-                response.put("queueToken", queueToken);
-                response.put("position", 150);
-                response.put("estimatedWaitTime", 5);
-            }
-            
+            response.put("redirectUrl", redirectUrl);
             response.put("eventId", eventId);
             response.put("timestamp", Instant.now().toString());
             
             return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
             logger.error("Error enqueuing user: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
@@ -127,42 +210,47 @@ public class QueueItController {
     }
 
     /**
-     * Check user's position in queue
+     * Get queue position for a user
      */
     @GetMapping("/position/{eventId}")
-    public ResponseEntity<Map<String, Object>> checkQueuePosition(
+    public ResponseEntity<Map<String, Object>> getQueuePosition(
             @PathVariable String eventId,
-            @RequestHeader("Authorization") String authorization) {
+            @RequestParam String queueitToken) {
+        
         try {
-            String queueToken = authorization.replace("Bearer ", "");
-            logger.info("Checking queue position for event: {}, token: {}", eventId, queueToken);
+            logger.info("Getting queue position for event: {}, token: {}", eventId, queueitToken);
             
-            // For demo purposes, we'll simulate position updates
-            // In production, this would call Queue-it's API
-            Map<String, Object> response = new HashMap<>();
+            // Call Queue-It API to get position
+            String apiUrl = String.format("https://%s/status/queue/%s/%s", 
+                queueDomain, customerId, eventId);
             
-            // Simulate position progression
-            int currentPosition = getSimulatedPosition(queueToken, eventId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", apiKey);
+            headers.set("Host", "queue-it.net");
             
-            if (currentPosition <= 0) {
-                // User can enter the site
-                response.put("redirectUrl", "/");
-                response.put("status", "entered");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> apiResponse = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class);
+            
+            if (apiResponse.getStatusCode().is2xxSuccessful()) {
+                JsonNode queueData = objectMapper.readTree(apiResponse.getBody());
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("eventId", eventId);
+                response.put("queueId", queueData.has("QueueId") ? queueData.get("QueueId").asText() : "");
+                response.put("position", queueData.has("Position") ? queueData.get("Position").asInt() : 0);
+                response.put("estimatedWaitTime", queueData.has("EstimatedWaitTime") ? queueData.get("EstimatedWaitTime").asInt() : 0);
+                response.put("timestamp", Instant.now().toString());
+                
+                return ResponseEntity.ok(response);
             } else {
-                // User is still in queue
-                response.put("position", currentPosition);
-                response.put("estimatedWaitTime", Math.max(1, currentPosition / 10));
-                response.put("status", "queued");
+                throw new RuntimeException("Failed to get queue position from Queue-It API");
             }
             
-            response.put("eventId", eventId);
-            response.put("timestamp", Instant.now().toString());
-            
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Error checking queue position: {}", e.getMessage());
+            logger.error("Error getting queue position: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Failed to check queue position");
+            errorResponse.put("error", "Failed to get queue position");
             errorResponse.put("message", e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
@@ -176,30 +264,33 @@ public class QueueItController {
         try {
             logger.info("Getting queue stats for event: {}", eventId);
             
-            Map<String, Object> response = new HashMap<>();
+            // Call Queue-It API to get queue statistics
+            String apiUrl = String.format("https://%s/status/queue/%s/%s", 
+                queueDomain, customerId, eventId);
             
-            // Simulate queue statistics
-            if (eventId.contains("flash-sale")) {
-                response.put("totalUsers", 2500);
-                response.put("activeUsers", 1800);
-                response.put("averageWaitTime", 12);
-                response.put("queueThroughput", 120);
-            } else if (eventId.contains("black-friday")) {
-                response.put("totalUsers", 5000);
-                response.put("activeUsers", 3200);
-                response.put("averageWaitTime", 18);
-                response.put("queueThroughput", 200);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", apiKey);
+            headers.set("Host", "queue-it.net");
+            
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> apiResponse = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class);
+            
+            if (apiResponse.getStatusCode().is2xxSuccessful()) {
+                JsonNode queueData = objectMapper.readTree(apiResponse.getBody());
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("eventId", eventId);
+                response.put("queueSize", queueData.has("QueueSize") ? queueData.get("QueueSize").asInt() : 0);
+                response.put("estimatedWaitTime", queueData.has("EstimatedWaitTime") ? queueData.get("EstimatedWaitTime").asInt() : 0);
+                response.put("isActive", queueData.has("IsActive") ? queueData.get("IsActive").asBoolean() : false);
+                response.put("timestamp", Instant.now().toString());
+                
+                return ResponseEntity.ok(response);
             } else {
-                response.put("totalUsers", 0);
-                response.put("activeUsers", 0);
-                response.put("averageWaitTime", 0);
-                response.put("queueThroughput", 0);
+                throw new RuntimeException("Failed to get queue stats from Queue-It API");
             }
             
-            response.put("eventId", eventId);
-            response.put("timestamp", Instant.now().toString());
-            
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error getting queue stats: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
@@ -219,28 +310,85 @@ public class QueueItController {
         response.put("service", "queueit-integration");
         response.put("timestamp", Instant.now().toString());
         response.put("customerId", customerId);
+        response.put("connector", "official-java-connector");
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Simulate position progression for demo purposes
+     * Helper class to provide HTTP request to Queue-It connector
      */
-    private int getSimulatedPosition(String queueToken, String eventId) {
-        // Use token hash to simulate consistent position progression
-        int hash = queueToken.hashCode();
-        int basePosition = Math.abs(hash % 200) + 50;
+    private static class HttpRequestProvider implements IHttpRequestProvider {
+        private final HttpServletRequest request;
         
-        // Simulate time-based progression
-        long currentTime = System.currentTimeMillis();
-        long tokenTime = Math.abs(hash) % 1000000; // Simulate token creation time
-        long timeDiff = (currentTime - tokenTime) / 1000; // Seconds since "token creation"
+        public HttpRequestProvider(HttpServletRequest request) {
+            this.request = request;
+        }
         
-        // Reduce position over time (simulate queue progression)
-        int timeReduction = (int) (timeDiff / 2); // Reduce position every 2 seconds
-        int finalPosition = Math.max(0, basePosition - timeReduction);
+        @Override
+        public String getUserAgent() {
+            return request.getHeader("User-Agent");
+        }
         
-        logger.debug("Simulated position for token {}: {} -> {}", queueToken, basePosition, finalPosition);
+        @Override
+        public String getClientIP() {
+            String xForwardedFor = request.getHeader("X-Forwarded-For");
+            if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+                return xForwardedFor.split(",")[0].trim();
+            }
+            return request.getRemoteAddr();
+        }
         
-        return finalPosition;
+        @Override
+        public String getRequestUrl() {
+            return request.getRequestURL().toString();
+        }
+        
+        @Override
+        public String getRequestUri() {
+            return request.getRequestURI();
+        }
+        
+        @Override
+        public String getHeader(String name) {
+            return request.getHeader(name);
+        }
+        
+        @Override
+        public String getCookieValue(String name) {
+            jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (jakarta.servlet.http.Cookie cookie : cookies) {
+                    if (cookie.getName().equals(name)) {
+                        return cookie.getValue();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Helper class to provide HTTP response to Queue-It connector
+     */
+    private static class HttpResponseProvider implements IHttpResponseProvider {
+        private final HttpServletResponse response;
+        
+        public HttpResponseProvider(HttpServletResponse response) {
+            this.response = response;
+        }
+        
+        @Override
+        public void setCookie(String name, String value, String domain, String path, int maxAge) {
+            jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie(name, value);
+            if (domain != null) cookie.setDomain(domain);
+            if (path != null) cookie.setPath(path);
+            cookie.setMaxAge(maxAge);
+            response.addCookie(cookie);
+        }
+        
+        @Override
+        public void setHeader(String name, String value) {
+            response.setHeader(name, value);
+        }
     }
 } 

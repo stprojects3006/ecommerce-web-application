@@ -1,0 +1,580 @@
+version: '3.8'
+
+# Define custom networks for production
+networks:
+  # Frontend network for web traffic
+  frontend-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+  # Backend network for microservices
+  backend-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+  # Database network for data persistence
+  database-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
+
+  # Monitoring network for observability
+  monitoring-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
+
+services:
+  # MongoDB - Production Configuration
+  mongodb:
+    image: mongo:latest
+    container_name: purely_mongodb_prod
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}
+    volumes:
+      - mongodb_data_prod:/data/db
+      - ./sample data:/docker-entrypoint-initdb.d
+    networks:
+      - database-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Service Registry (Eureka) - Production Configuration
+  service-registry:
+    image: openjdk:17
+    container_name: purely_service_registry_prod
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8761
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+    volumes:
+      - ./jars/service-registry.jar:/app/service-registry.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/service-registry.jar"]
+    networks:
+      - backend-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # API Gateway - Production Configuration
+  api-gateway:
+    image: openjdk:17
+    container_name: purely_api_gateway_prod
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      JWT_SECRET: ${JWT_SECRET:-your-super-secure-jwt-secret-key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    volumes:
+      - ./jars/api-gateway.jar:/app/api-gateway.jar
+    command: ["java", "-Xms1g", "-Xmx2g", "-jar", "/app/api-gateway.jar"]
+    networks:
+      - frontend-network
+      - backend-network
+      - database-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # Auth Service - Production Configuration
+  auth-service:
+    image: openjdk:17
+    container_name: purely_auth_service_prod
+    restart: unless-stopped
+    ports:
+      - "8088:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_auth_service?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-super-secure-jwt-secret-key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    volumes:
+      - ./jars/auth-service.jar:/app/auth-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/auth-service.jar"]
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Category Service - Production Configuration
+  category-service:
+    image: openjdk:17
+    container_name: purely_category_service_prod
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8082
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_category_service?authSource=admin
+    volumes:
+      - ./jars/category-service.jar:/app/category-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/category-service.jar"]
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Product Service - Production Configuration
+  product-service:
+    image: openjdk:17
+    container_name: purely_product_service_prod
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8083
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_product_service?authSource=admin
+    volumes:
+      - ./jars/product-service.jar:/app/product-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/product-service.jar"]
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Cart Service - Production Configuration
+  cart-service:
+    image: openjdk:17
+    container_name: purely_cart_service_prod
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8084
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_cart_service?authSource=admin
+    volumes:
+      - ./jars/cart-service.jar:/app/cart-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/cart-service.jar"]
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # User Service - Production Configuration
+  user-service:
+    image: openjdk:17
+    container_name: purely_user_service_prod
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_user_service?authSource=admin
+    volumes:
+      - ./jars/user-service.jar:/app/user-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/user-service.jar"]
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Order Service - Production Configuration
+  order-service:
+    image: openjdk:17
+    container_name: purely_order_service_prod
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8086
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_order_service?authSource=admin
+    volumes:
+      - ./jars/order-service.jar:/app/order-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/order-service.jar"]
+    networks:
+      - backend-network
+      - database-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Notification Service - Production Configuration
+  notification-service:
+    image: openjdk:17
+    container_name: purely_notification_service_prod
+    restart: unless-stopped
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8087
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://18.217.148.69:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: 18.217.148.69
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-test@gmail.com}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-test-password}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+    volumes:
+      - ./jars/notification-service.jar:/app/notification-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/notification-service.jar"]
+    networks:
+      - backend-network
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Nginx (Reverse Proxy) - Production Configuration
+  nginx:
+    image: nginx:alpine
+    container_name: purely_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - ./nginx-ssl-ec2-prod.conf:/etc/nginx/nginx.conf
+      - ./frontend/dist:/usr/share/nginx/html
+      # SSL Certificates (Let's Encrypt for production)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/html:/var/www/html:ro
+      # Self-signed certificates (fallback)
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - frontend-network
+      - backend-network
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--no-check-certificate", "https://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Prometheus (Monitoring) - Production Configuration
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: purely_prometheus_prod
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus-ec2-prod.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/blackbox-rules-ec2-prod.yml:/etc/prometheus/blackbox-rules.yml
+      - prometheus_data_prod:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring-network
+      - backend-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Grafana (Monitoring Dashboard) - Production Configuration
+  grafana:
+    image: grafana/grafana:latest
+    container_name: purely_grafana_prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SERVER_ROOT_URL: http://18.217.148.69:3000
+    volumes:
+      - grafana_data_prod:/var/lib/grafana
+      - ./00-gitrepo-sample-full-observability-demo/graphana-dashboard/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
+    networks:
+      - monitoring-network
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Promtail (Log Aggregation) - Production Configuration
+  promtail:
+    image: grafana/promtail:latest
+    container_name: purely_promtail_prod
+    restart: unless-stopped
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./prometheus/promtail-config-ec2-prod.yml:/etc/promtail/config.yml
+      - /var/log:/var/log
+    command:
+      - '-config.file=/etc/promtail/config.yml'
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9080/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Blackbox Exporter - Production Configuration
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: purely_blackbox_exporter_prod
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./prometheus/blackbox-ec2-prod.yml:/etc/blackbox_exporter/config.yml
+    command:
+      - '--config.file=/etc/blackbox_exporter/config.yml'
+    networks:
+      - monitoring-network
+      - frontend-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9115/probe?target=localhost&module=http_2xx"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Node Exporter - Production Configuration
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: purely_node_exporter_prod
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+volumes:
+  mongodb_data_prod:
+    driver: local
+  prometheus_data_prod:
+    driver: local
+  grafana_data_prod:
+    driver: local 

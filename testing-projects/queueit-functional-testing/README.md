@@ -1,452 +1,257 @@
-# Queue-it Integration Functional Testing Project
+# Queue-It Functional Testing
 
-## 🎯 Overview
-
-This testing project provides comprehensive functional testing for the Queue-it integration in the PURELY e-commerce application. It includes automated tests, manual testing procedures, and Grafana dashboard monitoring for performance analysis.
-
-## 📋 Test Coverage
-
-### ✅ Frontend Testing
-- Queue-it service initialization
-- Queue trigger detection
-- Queue overlay functionality
-- Queue indicator display
-- Token management
-- Error handling and recovery
-
-### ✅ Backend Testing
-- Queue-it API endpoints
-- Queue status checking
-- User enqueueing
-- Position polling
-- Queue statistics
-- Health monitoring
-
-### ✅ Integration Testing
-- End-to-end queue flow
-- Cross-browser compatibility
-- Mobile responsiveness
-- Performance under load
-- Error scenarios
-
-### ✅ Performance Testing
-- Queue response times
-- API latency monitoring
-- Concurrent user simulation
-- Memory usage analysis
-- Network performance
-
-## 🏗️ Project Structure
-
-```
-testing-projects/queueit-functional-testing/
-├── README.md                           # This documentation
-├── requirements.txt                    # Python dependencies
-├── config/
-│   ├── test_config.json               # Test configuration
-│   └── grafana_dashboards/            # Grafana dashboard templates
-├── tests/
-│   ├── frontend/                      # Frontend test suites
-│   ├── backend/                       # Backend test suites
-│   ├── integration/                   # Integration test suites
-│   └── performance/                   # Performance test suites
-├── utils/
-│   ├── test_helpers.py                # Common test utilities
-│   ├── grafana_client.py              # Grafana API client
-│   └── queueit_simulator.py           # Queue-it behavior simulator
-├── reports/                           # Test reports and results
-├── scripts/
-│   ├── run_all_tests.sh              # Run all test suites
-│   ├── run_frontend_tests.sh         # Run frontend tests only
-│   ├── run_backend_tests.sh          # Run backend tests only
-│   └── generate_report.sh            # Generate test reports
-└── docker/
-    ├── Dockerfile                     # Test environment container
-    └── docker-compose.yml             # Test services
-```
+This directory contains comprehensive functional tests for the Queue-It integration in the e-commerce application.
 
 ## 🚀 Quick Start
 
-### 1. Setup Test Environment
+### Prerequisites
+- Python 3.x
+- API Gateway running on localhost:8081
+- Queue-It credentials configured
 
+### One-Command Test
 ```bash
-# Navigate to testing project
-cd testing-projects/queueit-functional-testing
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Setup test configuration
-cp config/test_config.json.example config/test_config.json
-# Edit config/test_config.json with your settings
+# From the queueit-functional-testing directory
+./test.sh
 ```
 
-### 2. Run All Tests
+This will:
+- ✅ Check if API Gateway is running
+- ✅ Activate virtual environment
+- ✅ Run all Queue-It tests
+- ✅ Display results summary
 
+## 📋 Available Test Scripts
+
+### 1. Quick Test (`test.sh`)
+**Simple one-liner for basic testing:**
 ```bash
-# Run complete test suite
-./scripts/run_all_tests.sh
-
-# Or run specific test suites
-./scripts/run_frontend_tests.sh
-./scripts/run_backend_tests.sh
-./scripts/run_integration_tests.sh
-./scripts/run_performance_tests.sh
+./test.sh
 ```
 
-### 3. View Results
+**Output:**
+```
+🧪 Queue-It Quick Test
+======================
+✅ Using virtual environment
+✅ API Gateway is running
+🚀 Simple Queue-It Functional Test
+==================================================
+🔍 Testing Queue-It health...
+✅ Health Check: PASS
+   Details: Service: queueit-integration, Customer: futuraforge
+...
+📊 Quick Results Summary:
+==========================
+Status: PASS
+Tests Passed: 5/5
+Success Rate: 100.0%
+```
 
+### 2. Comprehensive Test Runner (`run_queueit_tests.sh`)
+**Advanced test runner with multiple options:**
 ```bash
-# Generate test report
-./scripts/generate_report.sh
+# Run comprehensive tests (default)
+./run_queueit_tests.sh
 
-# Open test report
-open reports/test_report.html
+# Quick health check only
+./run_queueit_tests.sh -q
+
+# Run specific test category
+./run_queueit_tests.sh -t health
+./run_queueit_tests.sh -t status
+./run_queueit_tests.sh -t enqueue
+
+# Show last test results
+./run_queueit_tests.sh -r
+
+# Run all tests with detailed report
+./run_queueit_tests.sh -a
+
+# Show help
+./run_queueit_tests.sh -h
 ```
 
-## 📊 Grafana Dashboard Monitoring
-
-### Dashboard Setup
-
-1. **Import Queue-it Test Dashboards**
-   - Navigate to Grafana (http://localhost:3000)
-   - Go to Dashboards → Import
-   - Import the dashboard templates from `config/grafana_dashboards/`
-
-2. **Available Dashboards**
-   - **Queue-it API Performance**: Monitor API response times and throughput
-   - **Queue-it Frontend Metrics**: Track frontend queue interactions
-   - **Queue-it Error Tracking**: Monitor errors and failures
-   - **Queue-it Load Testing**: Performance under load
-
-### Key Metrics to Monitor
-
-#### API Performance Metrics
-- **Response Time**: Average, 95th percentile, 99th percentile
-- **Throughput**: Requests per second
-- **Error Rate**: Percentage of failed requests
-- **Queue Size**: Number of users in queue
-- **Wait Time**: Average queue wait time
-
-#### Frontend Metrics
-- **Queue Trigger Rate**: How often queues are activated
-- **User Experience**: Time to join queue, position updates
-- **Error Recovery**: Success rate of error handling
-- **Mobile Performance**: Mobile-specific metrics
-
-#### System Metrics
-- **Memory Usage**: Application memory consumption
-- **CPU Usage**: System resource utilization
-- **Network Latency**: API call network performance
-- **Database Performance**: Queue data operations
-
-## 🧪 Test Suites
-
-### Frontend Test Suite
-
+### 3. Direct Python Test
+**Run the test directly:**
 ```bash
-# Run frontend tests
-python -m pytest tests/frontend/ -v --html=reports/frontend_report.html
+# Activate virtual environment
+source venv/bin/activate
+
+# Run the test
+python3 simple_functional_test.py
 ```
 
-**Test Cases:**
-- Queue-it service initialization
-- URL trigger detection
-- Queue overlay rendering
-- Queue indicator functionality
-- Token storage and retrieval
-- Error handling scenarios
-- Mobile responsiveness
-- Cross-browser compatibility
+## 🧪 Test Categories
 
-### Backend Test Suite
+### Health Check Tests
+- ✅ API Gateway connectivity
+- ✅ Queue-It service status
+- ✅ Customer ID validation
 
-```bash
-# Run backend tests
-python -m pytest tests/backend/ -v --html=reports/backend_report.html
-```
+### Queue Status Tests
+- ✅ Event status checking
+- ✅ Active/inactive queue detection
+- ✅ Multiple event support
 
-**Test Cases:**
-- Queue status endpoint
-- User enqueueing
-- Position polling
-- Queue statistics
-- Health check endpoint
-- Error handling
-- Rate limiting
-- Authentication
+### Enqueue Tests
+- ✅ Queue entry creation
+- ✅ Redirect URL generation
+- ✅ Event ID validation
 
-### Integration Test Suite
+### API Endpoint Tests
+- ✅ `/api/queueit/health` endpoint
+- ✅ `/api/queueit/status/{eventId}` endpoint
+- ✅ `/api/queueit/stats/{eventId}` endpoint
 
-```bash
-# Run integration tests
-python -m pytest tests/integration/ -v --html=reports/integration_report.html
-```
+### Error Handling Tests
+- ✅ Invalid event ID handling
+- ✅ Network error handling
+- ✅ Timeout handling
 
-**Test Cases:**
-- End-to-end queue flow
-- Frontend-backend communication
-- Token lifecycle management
-- Error recovery scenarios
-- Performance under load
-- Concurrent user handling
+## 📊 Test Results
 
-### Performance Test Suite
+### Success Indicators
+- ✅ **PASS**: Test completed successfully
+- ❌ **FAIL**: Test failed with error
+- ⚠️ **WARN**: Test completed but with warnings
 
-```bash
-# Run performance tests
-python -m pytest tests/performance/ -v --html=reports/performance_report.html
-```
-
-**Test Cases:**
-- Load testing with multiple users
-- Stress testing under high load
-- Memory leak detection
-- Response time analysis
-- Throughput measurement
-- Resource utilization
-
-## 📈 Monitoring and Analysis
-
-### Real-time Monitoring
-
-1. **Grafana Dashboards**
-   - Monitor test execution in real-time
-   - Track performance metrics
-   - Analyze error patterns
-   - Compare test results
-
-2. **Prometheus Metrics**
-   - Queue-it API metrics
-   - Frontend interaction metrics
-   - System performance metrics
-   - Custom business metrics
-
-3. **Log Analysis**
-   - Test execution logs
-   - Application logs
-   - Error logs
-   - Performance logs
-
-### Performance Analysis
-
-#### Latency Analysis
-```python
-# Example: Analyze API response times
-import requests
-import time
-
-def measure_api_latency():
-    start_time = time.time()
-    response = requests.get('http://localhost:8081/api/queueit/health')
-    end_time = time.time()
-    
-    latency = (end_time - start_time) * 1000  # Convert to milliseconds
-    return latency
-```
-
-#### Throughput Analysis
-```python
-# Example: Measure requests per second
-import concurrent.futures
-import time
-
-def measure_throughput():
-    start_time = time.time()
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(make_request) for _ in range(100)]
-        concurrent.futures.wait(futures)
-    
-    end_time = time.time()
-    duration = end_time - start_time
-    throughput = 100 / duration  # Requests per second
-    
-    return throughput
-```
-
-## 🔧 Configuration
-
-### Test Configuration
-
-Edit `config/test_config.json`:
-
+### Results File
+Tests generate `simple_test_results.json` with detailed results:
 ```json
 {
-  "base_url": "http://localhost:8081",
-  "frontend_url": "http://localhost:5173",
-  "grafana_url": "http://localhost:3000",
-  "grafana_api_key": "your-grafana-api-key",
-  "test_timeout": 30,
-  "retry_attempts": 3,
-  "concurrent_users": 10,
-  "test_duration": 300,
-  "queue_events": [
-    "flash-sale-2024",
-    "black-friday-2024",
-    "high-traffic-protection"
+  "timestamp": "2024-01-15T10:30:00",
+  "status": "PASS",
+  "passed": 5,
+  "total": 5,
+  "success_rate": "100.0%",
+  "results": [
+    {
+      "test": "Health Check",
+      "status": "PASS",
+      "details": "Service: queueit-integration, Customer: futuraforge"
+    }
   ]
 }
 ```
 
-### Environment Variables
+## 🔧 Setup Instructions
 
+### 1. Install Dependencies
 ```bash
-# Test environment
-export QUEUEIT_TEST_ENV=development
-export QUEUEIT_TEST_BASE_URL=http://localhost:8081
-export QUEUEIT_TEST_FRONTEND_URL=http://localhost:5173
+# Create virtual environment
+python3 -m venv venv
 
-# Grafana monitoring
-export GRAFANA_URL=http://localhost:3000
-export GRAFANA_API_KEY=your-api-key
+# Activate virtual environment
+source venv/bin/activate
 
-# Test reporting
-export TEST_REPORT_DIR=./reports
-export TEST_LOG_LEVEL=INFO
+# Install required packages
+pip install requests
 ```
 
-## 📊 Test Reports
+### 2. Configure Queue-It Credentials
+Ensure your Queue-It credentials are configured in the API Gateway:
+- Customer ID: `futuraforge`
+- Secret Key: Configured in application properties
+- Event IDs: `flash-sale-2024`, `black-friday-2024`, `checkout-protection`
 
-### HTML Reports
-
-Test results are generated in HTML format with:
-- Test execution summary
-- Pass/fail statistics
-- Performance metrics
-- Error details
-- Screenshots (for UI tests)
-- Performance graphs
-
-### JSON Reports
-
-Detailed test data in JSON format for:
-- Automated analysis
-- CI/CD integration
-- Custom reporting
-- Data visualization
-
-### Grafana Integration
-
-Test metrics are automatically sent to Grafana for:
-- Real-time monitoring
-- Historical analysis
-- Performance trending
-- Alert configuration
+### 3. Start Services
+```bash
+# Start API Gateway
+cd ../../microservice-backend/api-gateway
+./mvnw spring-boot:run
+```
 
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **Tests Failing Due to Timeout**
-   ```bash
-   # Increase timeout in config
-   "test_timeout": 60
-   ```
+#### 1. API Gateway Not Running
+```
+❌ API Gateway is not running
+```
+**Solution:** Start the API Gateway service
 
-2. **Grafana Connection Issues**
-   ```bash
-   # Check Grafana service
-   docker-compose ps grafana
-   
-   # Verify API key
-   curl -H "Authorization: Bearer your-api-key" http://localhost:3000/api/health
-   ```
+#### 2. Module Not Found
+```
+ModuleNotFoundError: No module named 'requests'
+```
+**Solution:** Activate virtual environment and install requests
+```bash
+source venv/bin/activate
+pip install requests
+```
 
-3. **Queue-it Service Not Responding**
-   ```bash
-   # Check API Gateway
-   curl http://localhost:8081/api/queueit/health
-   
-   # Check logs
-   docker-compose logs api-gateway
-   ```
+#### 3. Connection Refused
+```
+ConnectionError: HTTPConnectionPool
+```
+**Solution:** Check if API Gateway is running on port 8081
+
+#### 4. Queue-It Service Unavailable
+```
+❌ Health Check: FAIL
+```
+**Solution:** Verify Queue-It credentials and network connectivity
 
 ### Debug Mode
-
+For detailed debugging, run tests with verbose output:
 ```bash
-# Enable debug logging
-export TEST_LOG_LEVEL=DEBUG
+# Activate virtual environment
+source venv/bin/activate
 
-# Run tests with verbose output
-python -m pytest tests/ -v -s --log-cli-level=DEBUG
+# Run with debug output
+python3 -u simple_functional_test.py
 ```
 
-## 📋 Test Checklist
+## 📈 Performance Monitoring
 
-### Pre-Testing Checklist
-- [ ] Queue-it integration is deployed and running
-- [ ] Grafana dashboards are imported
-- [ ] Test configuration is updated
-- [ ] Test environment is clean
-- [ ] Dependencies are installed
+### Test Execution Time
+- Quick test: ~2-3 seconds
+- Comprehensive test: ~5-10 seconds
+- Individual category tests: ~1-2 seconds
 
-### Test Execution Checklist
-- [ ] Frontend tests pass
-- [ ] Backend tests pass
-- [ ] Integration tests pass
-- [ ] Performance tests meet requirements
-- [ ] Grafana metrics are being collected
-- [ ] Error rates are within acceptable limits
+### Success Metrics
+- **Target Success Rate**: 100%
+- **Expected Response Time**: < 2 seconds
+- **API Availability**: 99.9%
 
-### Post-Testing Checklist
-- [ ] Test reports are generated
-- [ ] Performance analysis is complete
-- [ ] Issues are documented
-- [ ] Recommendations are provided
-- [ ] Results are shared with team
+## 🔄 Continuous Testing
 
-## 🔄 Continuous Integration
+### Automated Test Execution
+```bash
+# Run tests every 5 minutes
+watch -n 300 ./test.sh
 
-### GitHub Actions
+# Run tests and log results
+./test.sh >> test_logs.txt 2>&1
+```
 
+### Integration with CI/CD
+Add to your CI/CD pipeline:
 ```yaml
-# .github/workflows/queueit-tests.yml
-name: Queue-it Integration Tests
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v2
-    
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    
-    - name: Install dependencies
-      run: |
-        pip install -r testing-projects/queueit-functional-testing/requirements.txt
-    
-    - name: Run tests
-      run: |
-        cd testing-projects/queueit-functional-testing
-        ./scripts/run_all_tests.sh
-    
-    - name: Upload test results
-      uses: actions/upload-artifact@v2
-      with:
-        name: test-results
-        path: testing-projects/queueit-functional-testing/reports/
+- name: Queue-It Functional Tests
+  run: |
+    cd testing-projects/queueit-functional-testing
+    ./test.sh
 ```
 
-## 📞 Support
+## 📚 Additional Resources
 
-For issues or questions:
-1. Check the troubleshooting section
-2. Review test logs in `reports/`
-3. Check Grafana dashboards for metrics
-4. Consult the main Queue-it integration guide
+- [Queue-It Official Documentation](https://queue-it.com/docs)
+- [API Gateway Configuration](../microservice-backend/api-gateway/README.md)
+- [E-commerce Application Documentation](../../README.md)
+
+## 🤝 Contributing
+
+To add new tests:
+1. Add test functions to `simple_functional_test.py`
+2. Update the test runner scripts
+3. Update this README with new test descriptions
+4. Test thoroughly before committing
 
 ---
 
-**Last Updated:** January 2025  
-**Version:** 1.0.0 
+**Last Updated:** January 2024  
+**Test Version:** 1.0.0  
+**Compatibility:** Queue-It v3.x, Spring Boot 3.x 

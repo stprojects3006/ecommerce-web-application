@@ -4,6 +4,31 @@
 
 This guide covers the complete integration of Queue-it's virtual waiting room with the PURELY e-commerce application. Queue-it helps manage high-traffic events and prevents website crashes during peak loads.
 
+## 🧪 Functional Test Cases
+
+All test cases are located in `testing-projects/queueit-functional-testing/`.
+
+| Category         | Test File/Location                                      | Description |
+|-----------------|---------------------------------------------------------|-------------|
+| **Backend**     | `tests/backend/test_queueit_api.py`                     | API health, status, enqueue, stats, error handling |
+|                 | `tests/backend/test_queueit_official_connector.py`      | Official Queue-It Java connector validation |
+| **Frontend**    | `tests/frontend/test_queueit_frontend.py`               | Service init, overlay, indicator, token, mobile, error |
+|                 | `tests/frontend/test_queueit_frontend_official.js`      | Official JS connector, event handling, redirect, token validation |
+| **Integration** | `tests/integration/test_queueit_integration.py`         | End-to-end queue flow, token lifecycle, error recovery |
+| **Performance** | `tests/performance/test_queueit_performance.py`         | Load, stress, memory, response time, throughput |
+| **Quick Test**  | `simple_functional_test.py`                             | Health, status, enqueue, endpoints, error handling |
+| **Test Runner** | `test.sh`, `run_queueit_tests.sh`, `generate_metrics.sh`| One-command and comprehensive test runners |
+
+**Descriptions:**
+- **Health Check:** Verifies API Gateway and Queue-It service health
+- **Queue Status:** Checks if queue is active for events
+- **Enqueue:** Simulates user joining the queue
+- **API Endpoints:** Validates all backend endpoints
+- **Overlay/Indicator:** Ensures UI components display and update correctly
+- **Mobile/Responsive:** Tests overlay on various devices
+- **Performance:** Simulates high load and concurrent users
+- **Error Handling:** Tests invalid events, network errors, and recovery
+
 ## 📋 Features Implemented
 
 ### ✅ Frontend Integration
@@ -78,15 +103,33 @@ events: {
     queueDomain: 'futuraforge.queue-it.net',
     cookieValidityMinute: 20,
     triggers: [
-      {
-        operator: 'Contains',
-        valueToCompare: '/flash-sale',
-        urlPart: 'PageUrl',
-        validatorType: 'UrlValidator'
-      }
+      { operator: 'Contains', valueToCompare: '/flash-sale', urlPart: 'PageUrl', validatorType: 'UrlValidator' }
     ]
   },
-  // ... more events
+  blackFriday: {
+    eventId: 'black-friday-2024',
+    queueDomain: 'futuraforge.queue-it.net',
+    cookieValidityMinute: 30,
+    triggers: [
+      { operator: 'Contains', valueToCompare: '/black-friday', urlPart: 'PageUrl', validatorType: 'UrlValidator' }
+    ]
+  },
+  highTraffic: {
+    eventId: 'high-traffic-protection',
+    queueDomain: 'futuraforge.queue-it.net',
+    cookieValidityMinute: 15,
+    triggers: [
+      { operator: 'Contains', valueToCompare: '/products', urlPart: 'PageUrl', validatorType: 'UrlValidator' }
+    ]
+  },
+  checkout: {
+    eventId: 'checkout-protection',
+    queueDomain: 'futuraforge.queue-it.net',
+    cookieValidityMinute: 10,
+    triggers: [
+      { operator: 'Contains', valueToCompare: '/order/checkout', urlPart: 'PageUrl', validatorType: 'UrlValidator' }
+    ]
+  }
 }
 ```
 
@@ -476,11 +519,62 @@ location /api/queueit/ {
 - [ ] SSL integration works
 - [ ] Performance under load
 
-## 🔗 Related Documentation
+## 📈 Monitoring & Test Result Visualization
 
-- [SSL_SETUP_GUIDE.md](./SSL_SETUP_GUIDE.md) - SSL configuration
-- [TROUBLESHOOTING_GUIDE.md](./TROUBLESHOOTING_GUIDE.md) - General troubleshooting
-- [COMPREHENSIVE_DEPLOYMENT_GUIDE.md](./COMPREHENSIVE_DEPLOYMENT_GUIDE.md) - Full deployment guide
+### **Test Results**
+- All test scripts output JSON and console summaries
+- Results are stored in `simple_test_results.json` and logs
+- Success rate, error rate, and detailed results are available
+
+### **Grafana Dashboard Integration**
+
+#### **Step-by-Step Guide to Setup Grafana Dashboards**
+
+1. **Start Prometheus and Grafana**
+   - Use provided Docker Compose or manual setup
+   - Ensure Prometheus is scraping API Gateway metrics
+
+2. **Access Grafana**
+   - Open your browser: [http://localhost:3000](http://localhost:3000)
+   - Login: `admin` / `admin` (or `admin123`)
+
+3. **Add Prometheus Data Source**
+   - Go to Configuration (gear icon) → Data Sources
+   - Click "Add data source"
+   - Select "Prometheus"
+   - Set URL: `http://prometheus:9090`
+   - Click "Save & Test"
+
+4. **Import Dashboards**
+   - Go to Dashboards → Import
+   - Upload JSON files from `config/grafana_dashboards/`:
+     - `queueit-comprehensive-dashboard.json`
+     - `queueit-api-performance.json`
+     - `queueit-frontend-metrics.json`
+     - `queueit-load-testing.json`
+
+5. **View Metrics**
+   - Open the imported dashboards
+   - See real-time and historical test results, API performance, queue stats, and error rates
+
+6. **Customize Panels**
+   - Add new panels for custom queries (see README for example PromQL queries)
+   - Adjust time ranges and refresh intervals as needed
+
+## 🛠️ Troubleshooting & Best Practices
+
+- Check API Gateway and Prometheus health endpoints
+- Use `./test.sh` and `./generate_metrics.sh` to generate test data
+- Review logs and JSON reports for errors
+- Use Grafana dashboards for real-time monitoring
+- Keep environment variables and event configuration up to date
+- For production, disable bypass and enable all security features
+
+## 📚 References
+- [Queue-It Official Documentation](https://queue-it.com/docs)
+- [Grafana Documentation](https://grafana.com/docs/)
+- [Prometheus Documentation](https://prometheus.io/docs/)
+- See `testing-projects/queueit-functional-testing/README.md` for more
 
 ---
 

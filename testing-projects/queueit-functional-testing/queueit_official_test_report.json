@@ -1,0 +1,32 @@
+{
+  "overall_status": "FAIL",
+  "passed_tests": 0,
+  "total_tests": 4,
+  "success_rate": "0.0%",
+  "duration_seconds": 22.46,
+  "timestamp": "2025-07-01 05:08:01",
+  "test_results": {
+    "backend": {
+      "status": "FAIL",
+      "error": "INFO:__main__:\ud83d\ude80 Starting Queue-It Official Connector Comprehensive Test Suite\nINFO:__main__:Testing Queue-It health check...\nINFO:__main__:\u2705 Health check passed\nINFO:__main__:Testing all configured events...\nINFO:__main__:Testing event: flash_sale (flash-sale-2024)\nINFO:__main__:Testing queue status check for event: flash-sale-2024\nERROR:__main__:\u274c Queue status check failed for flash-sale-2024: Status check failed: 500\nINFO:__main__:Testing user enqueue for event: flash-sale-2024\nERROR:__main__:\u274c User enqueue failed for flash-sale-2024: Enqueue failed: 500\nINFO:__main__:Testing queue stats for event: flash-sale-2024\nERROR:__main__:\u274c Queue stats check failed for flash-sale-2024: Stats check failed: 500\nINFO:__main__:Testing event: black_friday (black-friday-2024)\nINFO:__main__:Testing queue status check for event: black-friday-2024\nERROR:__main__:\u274c Queue status check failed for black-friday-2024: Status check failed: 500\nINFO:__main__:Testing user enqueue for event: black-friday-2024\nERROR:__main__:\u274c User enqueue failed for black-friday-2024: Enqueue failed: 500\nINFO:__main__:Testing queue stats for event: black-friday-2024\nERROR:__main__:\u274c Queue stats check failed for black-friday-2024: Stats check failed: 500\nINFO:__main__:Testing event: high_traffic (high-traffic-protection)\nINFO:__main__:Testing queue status check for event: high-traffic-protection\nERROR:__main__:\u274c Queue status check failed for high-traffic-protection: Status check failed: 500\nINFO:__main__:Testing user enqueue for event: high-traffic-protection\nERROR:__main__:\u274c User enqueue failed for high-traffic-protection: Enqueue failed: 500\nINFO:__main__:Testing queue stats for event: high-traffic-protection\nERROR:__main__:\u274c Queue stats check failed for high-traffic-protection: Stats check failed: 500\nINFO:__main__:Testing event: checkout (checkout-protection)\nINFO:__main__:Testing queue status check for event: checkout-protection\nERROR:__main__:\u274c Queue status check failed for checkout-protection: Status check failed: 500\nINFO:__main__:Testing user enqueue for event: checkout-protection\nERROR:__main__:\u274c User enqueue failed for checkout-protection: Enqueue failed: 500\nINFO:__main__:Testing queue stats for event: checkout-protection\nERROR:__main__:\u274c Queue stats check failed for checkout-protection: Stats check failed: 500\nINFO:__main__:\u2705 All events test completed: FAIL\nINFO:__main__:Testing token validation for event: flash-sale-2024\nINFO:__main__:Testing user enqueue for event: flash-sale-2024\nERROR:__main__:\u274c User enqueue failed for flash-sale-2024: Enqueue failed: 500\nINFO:__main__:Testing queue position check for event: flash-sale-2024\nERROR:__main__:\u274c Queue position check failed for flash-sale-2024: Position check failed: 500\nINFO:__main__:Testing error handling...\nINFO:__main__:\u2705 Error test passed: invalid_event_id\nINFO:__main__:\u2705 Error test passed: missing_required_fields\nINFO:__main__:\u2705 Error test passed: invalid_token\nINFO:__main__:\u2705 Error handling test completed: PASS\nINFO:__main__:\ud83c\udfaf Test Suite Complete: FAIL\nINFO:__main__:\ud83d\udcca Results: 2/5 tests passed (40.0%)\n"
+    },
+    "frontend": {
+      "status": "FAIL",
+      "error": "Command '['npm', 'install']' returned non-zero exit status 254."
+    },
+    "integration": {
+      "status": "FAIL",
+      "error": "HTTPConnectionPool(host='18.217.148.69', port=8081): Max retries exceeded with url: /api/queueit/health (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x10e95f8c0>, 'Connection to 18.217.148.69 timed out. (connect timeout=10)'))"
+    },
+    "performance": {
+      "status": "FAIL",
+      "error": "HTTPConnectionPool(host='18.217.148.69', port=8081): Max retries exceeded with url: /api/queueit/status/flash-sale-2024 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x10e91f890>, 'Connection to 18.217.148.69 timed out. (connect timeout=5)'))"
+    }
+  },
+  "summary": {
+    "backend": "FAIL",
+    "frontend": "FAIL",
+    "integration": "FAIL",
+    "performance": "FAIL"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "timestamp": "2025-07-01 05:21:30",
+  "passed": 3,
+  "total": 5,
+  "success_rate": "60.0%",
+  "status": "PARTIAL",
+  "results": [
+    {
+      "test": "Health Check",
+      "status": "PASS",
+      "details": "Service: queueit-integration, Customer: futuraforge",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "Queue Status - flash-sale-2024",
+      "status": "FAIL",
+      "details": "HTTP 500",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "Queue Status - black-friday-2024",
+      "status": "FAIL",
+      "details": "HTTP 500",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "Queue Status - checkout-protection",
+      "status": "FAIL",
+      "details": "HTTP 500",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "Enqueue",
+      "status": "FAIL",
+      "details": "HTTP 500",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "API /health",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "API /status/flash-sale-2024",
+      "status": "PASS",
+      "details": "HTTP 500",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "API /stats/flash-sale-2024",
+      "status": "PASS",
+      "details": "HTTP 500",
+      "timestamp": "2025-07-01 05:21:30"
+    },
+    {
+      "test": "Error Handling",
+      "status": "PASS",
+      "details": "Proper error: 500",
+      "timestamp": "2025-07-01 05:21:30"
+    }
+  ]
+}

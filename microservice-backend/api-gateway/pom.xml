@@ -36,6 +36,20 @@
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
+		
+		<!-- Queue-It Java Connector -->
+		<dependency>
+			<groupId>com.queue-it</groupId>
+			<artifactId>queueit-connector-java</artifactId>
+			<version>4.3.2</version>
+		</dependency>
+		
+		<!-- JSON processing for Queue-It -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		
 		<!-- Temporarily commenting out actuator to debug servlet issue
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

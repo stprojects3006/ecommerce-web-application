@@ -1,0 +1,30 @@
+{
+    "localhost": {
+        "backend": {
+            "url": "http://localhost:8081",
+            "api_base": "http://localhost:8081/api/queueit",
+            "health_endpoint": "http://localhost:8081/actuator/health"
+        },
+        "frontend": {
+            "url": "https://localhost",
+            "flash_sale_url": "https://localhost/flash-sale"
+        },
+        "queueit": {
+            "customer_id": "your-customer-id",
+            "secret_key": "your-secret-key",
+            "api_key": "your-api-key",
+            "queue_domain": "your-customer-id.queue-it.net",
+            "events": {
+                "flash_sale": "flash-sale-2024",
+                "black_friday": "black-friday-2024",
+                "checkout": "checkout-protection",
+                "high_traffic": "high-traffic-protection"
+            }
+        },
+        "test": {
+            "user_agent": "Mozilla/5.0 (Test Browser) QueueIt-Test-Suite/1.0",
+            "ip_address": "127.0.0.1",
+            "timeout": 10
+        }
+    }
+} 

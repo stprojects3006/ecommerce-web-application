@@ -13,7 +13,7 @@ This guide provides comprehensive instructions for setting up SSL certificates f
 
 ## 🚀 Quick Setup Options
 
-### Option 1: Self-Signed Certificates (Testing)
+### Option 1: Self-Signed Certificates (Testing) - CURRENTLY WORKING
 
 For development and testing environments:
 
@@ -25,9 +25,14 @@ chmod +x generate-selfsigned-cert.sh
 # Generate self-signed certificate
 sudo ./generate-selfsigned-cert.sh 18.217.148.69
 
-# Create SSL directory for Docker
+# Create SSL directory for Docker (if not exists)
 mkdir -p ssl
 sudo cp /etc/nginx/ssl/nginx-selfsigned.* ssl/
+
+# Set proper permissions for Docker
+sudo chown $USER:$USER ssl/*
+chmod 600 ssl/nginx-selfsigned.key
+chmod 644 ssl/nginx-selfsigned.crt
 
 # Deploy with SSL
 ./deploy.sh
@@ -50,7 +55,7 @@ sudo ./ssl-setup.sh yourdomain.com your-email@example.com
 
 ## 🔧 Detailed Setup Instructions
 
-### 1. Self-Signed Certificate Setup
+### 1. Self-Signed Certificate Setup (CURRENTLY WORKING)
 
 #### Step 1: Generate Self-Signed Certificate
 ```bash
@@ -72,7 +77,21 @@ chmod 600 ssl/nginx-selfsigned.key
 chmod 644 ssl/nginx-selfsigned.crt
 ```
 
-#### Step 3: Deploy with SSL
+#### Step 3: Verify Current Configuration
+The current `docker-compose.yml` is already configured for self-signed certificates:
+```yaml
+nginx:
+  volumes:
+    - ./nginx-ssl.conf:/etc/nginx/nginx.conf
+    - ./frontend/dist:/usr/share/nginx/html
+    # Self-signed certificates for testing (CURRENTLY ACTIVE)
+    - ./ssl:/etc/nginx/ssl:ro
+    # SSL Certificates (uncomment when using Let's Encrypt)
+    # - /etc/letsencrypt:/etc/letsencrypt:ro
+    # - /var/www/html:/var/www/html:ro
+```
+
+#### Step 4: Deploy with SSL
 ```bash
 # Build and deploy
 ./build.sh
@@ -129,6 +148,15 @@ ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
 
 ## 🔍 SSL Configuration Details
 
+### Current Working Configuration
+
+The application currently uses self-signed certificates with the following setup:
+
+- **Certificate Location**: `ssl/nginx-selfsigned.crt`
+- **Private Key Location**: `ssl/nginx-selfsigned.key`
+- **Nginx Configuration**: `nginx-ssl.conf`
+- **Docker Volume Mount**: `./ssl:/etc/nginx/ssl:ro`
+
 ### Nginx SSL Configuration
 
 The SSL configuration includes:
@@ -156,7 +184,7 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 SSL-enabled CORS headers:
 ```nginx
 # CORS headers for HTTPS
-add_header Access-Control-Allow-Origin "https://yourdomain.com" always;
+add_header Access-Control-Allow-Origin "https://localhost" always;
 add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
 add_header Access-Control-Allow-Headers "*" always;
 add_header Access-Control-Allow-Credentials "true" always;
@@ -166,7 +194,7 @@ add_header Access-Control-Allow-Credentials "true" always;
 
 ### Certificate Status
 ```bash
-# Check self-signed certificate
+# Check self-signed certificate (CURRENTLY WORKING)
 sudo /usr/local/bin/cert-info.sh
 
 # Check Let's Encrypt certificate
@@ -177,6 +205,9 @@ sudo /usr/local/bin/ssl-status.sh yourdomain.com
 ```bash
 # Comprehensive SSL diagnostics
 sudo /usr/local/bin/ssl-troubleshoot.sh yourdomain.com
+
+# Test current self-signed certificate
+openssl x509 -in ssl/nginx-selfsigned.crt -text -noout | head -20
 ```
 
 ### Certificate Renewal
@@ -193,11 +224,11 @@ sudo journalctl -u certbot.timer
 # Test SSL configuration
 sudo nginx -t
 
-# Test SSL connection
-curl -k https://yourdomain.com
+# Test SSL connection (self-signed - use -k flag)
+curl -k https://18.217.148.69
 
 # Check SSL certificate
-openssl s_client -connect yourdomain.com:443 -servername yourdomain.com
+openssl s_client -connect 18.217.148.69:443 -servername 18.217.148.69
 ```
 
 ## 🔧 Troubleshooting
@@ -207,8 +238,8 @@ openssl s_client -connect yourdomain.com:443 -servername yourdomain.com
 #### 1. Certificate Not Found
 ```bash
 # Check certificate location
-ls -la /etc/letsencrypt/live/yourdomain.com/
 ls -la ssl/
+ls -la /etc/letsencrypt/live/yourdomain.com/
 
 # Verify nginx configuration
 nginx -t
@@ -224,7 +255,13 @@ sudo ufw status
 sudo iptables -L
 ```
 
-#### 3. Let's Encrypt ACME Challenge Failed
+#### 3. Self-Signed Certificate Browser Warning
+This is expected behavior for self-signed certificates:
+- Click "Advanced" in browser warning
+- Click "Proceed to site (unsafe)"
+- For production, use Let's Encrypt certificates
+
+#### 4. Let's Encrypt ACME Challenge Failed
 ```bash
 # Check webroot directory
 ls -la /var/www/html/.well-known/acme-challenge/
@@ -233,12 +270,12 @@ ls -la /var/www/html/.well-known/acme-challenge/
 curl http://yourdomain.com/.well-known/acme-challenge/test
 ```
 
-#### 4. Certificate Expired
+#### 5. Certificate Expired
 ```bash
 # Check certificate expiry
-openssl x509 -in /etc/letsencrypt/live/yourdomain.com/fullchain.pem -noout -dates
+openssl x509 -in ssl/nginx-selfsigned.crt -noout -dates
 
-# Force renewal
+# For Let's Encrypt, force renewal
 sudo certbot renew --force-renewal
 ```
 
@@ -251,13 +288,13 @@ sudo certbot renew --force-renewal
 #### Command Line Tools
 ```bash
 # Test SSL configuration
-openssl s_client -connect yourdomain.com:443 -servername yourdomain.com
+openssl s_client -connect 18.217.148.69:443 -servername 18.217.148.69
 
 # Check certificate chain
-openssl s_client -connect yourdomain.com:443 -showcerts
+openssl s_client -connect 18.217.148.69:443 -showcerts
 
 # Test specific cipher
-openssl s_client -connect yourdomain.com:443 -cipher ECDHE-RSA-AES128-GCM-SHA256
+openssl s_client -connect 18.217.148.69:443 -cipher ECDHE-RSA-AES128-GCM-SHA256
 ```
 
 ## 📊 SSL Performance Optimization
@@ -326,16 +363,16 @@ sudo /usr/local/bin/ssl-status.sh yourdomain.com
 ## 📋 Checklist
 
 ### Pre-Setup
-- [ ] Domain DNS configured
+- [ ] Domain DNS configured (for Let's Encrypt)
 - [ ] Ports 80 and 443 open
 - [ ] Root access available
 - [ ] Email address for Let's Encrypt
 
-### Self-Signed Setup
-- [ ] Generated self-signed certificate
-- [ ] Copied certificates to project directory
-- [ ] Updated nginx configuration
-- [ ] Tested SSL connection
+### Self-Signed Setup (CURRENTLY WORKING)
+- [x] Generated self-signed certificate
+- [x] Copied certificates to project directory
+- [x] Updated nginx configuration
+- [x] Tested SSL connection
 
 ### Let's Encrypt Setup
 - [ ] Domain resolves to server
@@ -345,10 +382,10 @@ sudo /usr/local/bin/ssl-status.sh yourdomain.com
 - [ ] Tested certificate renewal
 
 ### Post-Setup
-- [ ] SSL connection working
-- [ ] HTTP to HTTPS redirect working
-- [ ] CORS headers configured
-- [ ] Automatic renewal configured
+- [x] SSL connection working
+- [x] HTTP to HTTPS redirect working
+- [x] CORS headers configured
+- [ ] Automatic renewal configured (for Let's Encrypt)
 - [ ] Monitoring set up
 
 ## 🔗 Related Documentation
@@ -356,6 +393,23 @@ sudo /usr/local/bin/ssl-status.sh yourdomain.com
 - [PORT_SETUP_GUIDE.md](./PORT_SETUP_GUIDE.md) - Port configuration
 - [TROUBLESHOOTING_GUIDE.md](./TROUBLESHOOTING_GUIDE.md) - SSL troubleshooting
 - [COMPREHENSIVE_DEPLOYMENT_GUIDE.md](./COMPREHENSIVE_DEPLOYMENT_GUIDE.md) - Full deployment guide
+
+## 🆕 Latest Updates
+
+### Current Working Status (June 2025)
+- ✅ Self-signed certificates are working correctly
+- ✅ Nginx SSL configuration is properly set up
+- ✅ Docker volume mounts are correctly configured
+- ✅ CORS headers are working with HTTPS
+- ✅ Health check endpoints are accessible
+- ✅ All microservices are accessible through SSL
+
+### Recent Fixes
+- Fixed nginx health check configuration
+- Updated CORS headers for HTTPS
+- Corrected certificate paths in nginx configuration
+- Added proper SSL certificate validation
+- Improved error handling in SSL scripts
 
 ---
 
