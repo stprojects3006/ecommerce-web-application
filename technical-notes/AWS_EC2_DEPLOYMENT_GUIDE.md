@@ -23,6 +23,7 @@ sudo ./setup-ec2-prod.sh affluenceit.com your-email@domain.com
 ```
 
 - This script will:
+  - **Build the Queue-it connector** from the `connector-jakarta-main` directory (if present), ensuring the API Gateway can resolve the Queue-it dependency.
   - Generate a production .env file with your domain and CORS settings
   - Generate a production Nginx SSL config with your domain and CORS
   - Generate a Prometheus config with your domain in all targets
@@ -87,6 +88,7 @@ ssh -i your-key.pem ubuntu@18.217.148.69
 
 ## 🔧 What the Automated Script Does
 
+- **Builds Queue-it Connector:** If the `connector-jakarta-main` directory is present, the script will build both the `core` and `jakarta` modules using Maven. This is required for the API Gateway to resolve the `queueit-connector-java` dependency. If the directory is missing, the script will skip this step and print a warning.
 - **Generates .env**: All URLs, CORS, and ports are set for your domain.
 - **Generates Nginx SSL Config**: CORS and proxy settings for your domain, SSL paths for Let's Encrypt.
 - **Generates Prometheus Config**: All monitoring targets use your domain.

@@ -14,6 +14,22 @@ if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
   exit 1
 fi
 
+echo "🚀 Starting automated production setup for domain: $DOMAIN"
+
+# --- Build Queue-it Connector if present ---
+if [ -d "connector-jakarta-main" ]; then
+  echo "🔨 Building Queue-it connector modules..."
+  if [ -d "connector-jakarta-main/core" ]; then
+    (cd connector-jakarta-main/core && mvn clean install)
+  fi
+  if [ -d "connector-jakarta-main/jakarta" ]; then
+    (cd connector-jakarta-main/jakarta && mvn clean install)
+  fi
+  echo "✅ Queue-it connector build complete."
+else
+  echo "⚠️  connector-jakarta-main directory not found. Skipping Queue-it connector build."
+fi
+
 # --- Generate .env for production ---
 echo "🔧 Generating .env for $DOMAIN"
 cat > .env <<EOF
@@ -239,4 +255,12 @@ sudo ./ssl-setup.sh $DOMAIN $EMAIL
 echo "🚀 Running deployment script"
 sudo ./deploy.sh
 
+echo ""
 echo "✅ Deployment complete! Visit https://$DOMAIN"
+echo ""
+echo "📁 Summary of generated/updated files:"
+echo "  • .env"
+echo "  • nginx-ssl-ec2-prod.conf"
+echo "  • prometheus/prometheus-ec2-prod.yml"
+echo ""
+echo "🔑 Please review .env and fill in any secrets (passwords, JWT, mail, etc.) before going live."
