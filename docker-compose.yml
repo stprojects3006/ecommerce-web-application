@@ -1,6 +1,6 @@
 version: '3.8'
 
-# Define custom networks
+# Define custom networks for production
 networks:
   # Frontend network for web traffic
   frontend-network:
@@ -31,18 +31,18 @@ networks:
         - subnet: 172.23.0.0/16
 
 services:
-  # MongoDB
+  # MongoDB - Production Configuration
   mongodb:
     image: mongo:latest
-    container_name: purely_mongodb
+    container_name: purely_mongodb_prod
     restart: unless-stopped
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}
     volumes:
-      - mongodb_data:/data/db
+      - mongodb_data_prod:/data/db
       - ./sample data:/docker-entrypoint-initdb.d
     networks:
       - database-network
@@ -51,19 +51,29 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Service Registry (Eureka)
+  # Service Registry (Eureka) - Production Configuration
   service-registry:
     image: openjdk:17
-    container_name: purely_service_registry
+    container_name: purely_service_registry_prod
     restart: unless-stopped
     ports:
       - "8761:8761"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8761
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
     volumes:
       - ./jars/service-registry.jar:/app/service-registry.jar
-    command: ["java", "-jar", "/app/service-registry.jar"]
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/service-registry.jar"]
     networks:
       - backend-network
     depends_on:
@@ -74,19 +84,31 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # API Gateway
+  # API Gateway - Production Configuration
   api-gateway:
     image: openjdk:17
-    container_name: purely_api_gateway
+    container_name: purely_api_gateway_prod
     restart: unless-stopped
     ports:
       - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
+      JWT_SECRET: ${JWT_SECRET:-your-super-secure-jwt-secret-key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
     volumes:
       - ./jars/api-gateway.jar:/app/api-gateway.jar
-    command: ["java", "-jar", "/app/api-gateway.jar"]
+    command: ["java", "-Xms1g", "-Xmx2g", "-jar", "/app/api-gateway.jar"]
     networks:
       - frontend-network
       - backend-network
@@ -95,24 +117,36 @@ services:
       service-registry:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
 
-  # Auth Service
+  # Auth Service - Production Configuration
   auth-service:
     image: openjdk:17
-    container_name: purely_auth_service
+    container_name: purely_auth_service_prod
     restart: unless-stopped
     ports:
       - "8088:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/purely_auth_service?authSource=admin
+      SERVER_PORT: 8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_auth_service?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-super-secure-jwt-secret-key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
     volumes:
       - ./jars/auth-service.jar:/app/auth-service.jar
-    command: ["java", "-jar", "/app/auth-service.jar"]
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/auth-service.jar"]
     networks:
       - backend-network
       - database-network
@@ -126,20 +160,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Category Service
+  # Category Service - Production Configuration
   category-service:
     image: openjdk:17
-    container_name: purely_category_service
+    container_name: purely_category_service_prod
     restart: unless-stopped
     ports:
       - "8082:8082"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/purely_category_service?authSource=admin
+      SERVER_PORT: 8082
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_category_service?authSource=admin
     volumes:
       - ./jars/category-service.jar:/app/category-service.jar
-    command: ["java", "-jar", "/app/category-service.jar"]
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/category-service.jar"]
     networks:
       - backend-network
       - database-network
@@ -153,20 +197,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Product Service
+  # Product Service - Production Configuration
   product-service:
     image: openjdk:17
-    container_name: purely_product_service
+    container_name: purely_product_service_prod
     restart: unless-stopped
     ports:
       - "8083:8083"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/purely_product_service?authSource=admin
+      SERVER_PORT: 8083
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_product_service?authSource=admin
     volumes:
       - ./jars/product-service.jar:/app/product-service.jar
-    command: ["java", "-jar", "/app/product-service.jar"]
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/product-service.jar"]
     networks:
       - backend-network
       - database-network
@@ -180,20 +234,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Cart Service
+  # Cart Service - Production Configuration
   cart-service:
     image: openjdk:17
-    container_name: purely_cart_service
+    container_name: purely_cart_service_prod
     restart: unless-stopped
     ports:
       - "8084:8084"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/purely_cart_service?authSource=admin
+      SERVER_PORT: 8084
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_cart_service?authSource=admin
     volumes:
       - ./jars/cart-service.jar:/app/cart-service.jar
-    command: ["java", "-jar", "/app/cart-service.jar"]
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/cart-service.jar"]
     networks:
       - backend-network
       - database-network
@@ -207,20 +271,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Order Service
-  order-service:
+  # User Service - Production Configuration
+  user-service:
     image: openjdk:17
-    container_name: purely_order_service
+    container_name: purely_user_service_prod
     restart: unless-stopped
     ports:
       - "8085:8085"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/purely_order_service?authSource=admin
+      SERVER_PORT: 8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_user_service?authSource=admin
     volumes:
-      - ./jars/order-service.jar:/app/order-service.jar
-    command: ["java", "-jar", "/app/order-service.jar"]
+      - ./jars/user-service.jar:/app/user-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/user-service.jar"]
     networks:
       - backend-network
       - database-network
@@ -234,20 +308,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # User Service
-  user-service:
+  # Order Service - Production Configuration
+  order-service:
     image: openjdk:17
-    container_name: purely_user_service
+    container_name: purely_order_service_prod
     restart: unless-stopped
     ports:
       - "8086:8086"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/purely_user_service?authSource=admin
+      SERVER_PORT: 8086
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-your-secure-password}@mongodb:27017/purely_order_service?authSource=admin
     volumes:
-      - ./jars/user-service.jar:/app/user-service.jar
-    command: ["java", "-jar", "/app/user-service.jar"]
+      - ./jars/order-service.jar:/app/order-service.jar
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/order-service.jar"]
     networks:
       - backend-network
       - database-network
@@ -261,16 +345,26 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Notification Service
+  # Notification Service - Production Configuration
   notification-service:
     image: openjdk:17
-    container_name: purely_notification_service
+    container_name: purely_notification_service_prod
     restart: unless-stopped
     ports:
       - "8087:8087"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8087
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://affluenceit.com:8761/eureka/
+      EUREKA_INSTANCE_PREFERIPADDRESS: true
+      EUREKA_INSTANCE_IPADDRESS: affluenceit.com
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-test@gmail.com}
@@ -279,7 +373,7 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
     volumes:
       - ./jars/notification-service.jar:/app/notification-service.jar
-    command: ["java", "-jar", "/app/notification-service.jar"]
+    command: ["java", "-Xms512m", "-Xmx1g", "-jar", "/app/notification-service.jar"]
     networks:
       - backend-network
     depends_on:
@@ -290,23 +384,29 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Nginx (Reverse Proxy) --sanjeev
+  # Nginx (Reverse Proxy) - Production Configuration
   nginx:
     image: nginx:alpine
-    container_name: purely_nginx
+    container_name: purely_nginx_prod
     restart: unless-stopped
     ports:
       - "80:80"
       - "8080:8080"
       - "443:443"
     volumes:
-      - ./nginx-ssl.conf:/etc/nginx/nginx.conf
+      - ./nginx-ssl-ec2-prod.conf:/etc/nginx/nginx.conf
       - ./frontend/dist:/usr/share/nginx/html
-      # SSL Certificates (uncomment when using Let's Encrypt)
-      # - /etc/letsencrypt:/etc/letsencrypt:ro
-      # - /var/www/html:/var/www/html:ro
-      # Self-signed certificates for testing
+      # SSL Certificates (Let's Encrypt for production)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/html:/var/www/html:ro
+      # Self-signed certificates (fallback)
       - ./ssl:/etc/nginx/ssl:ro
     networks:
       - frontend-network
@@ -319,18 +419,24 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
-  # Prometheus (Monitoring)
+  # Prometheus (Monitoring) - Production Configuration
   prometheus:
     image: prom/prometheus:latest
-    container_name: purely_prometheus
+    container_name: purely_prometheus_prod
     restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./prometheus/blackbox-rules.yml:/etc/prometheus/blackbox-rules.yml
-      - prometheus_data:/prometheus
+      - ./prometheus/prometheus-ec2-prod.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/blackbox-rules-ec2-prod.yml:/etc/prometheus/blackbox-rules.yml
+      - prometheus_data_prod:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -346,19 +452,26 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Grafana (Monitoring Dashboard)
+  # Grafana (Monitoring Dashboard) - Production Configuration
   grafana:
     image: grafana/grafana:latest
-    container_name: purely_grafana
+    container_name: purely_grafana_prod
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SERVER_ROOT_URL: http://affluenceit.com:3000
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana_data_prod:/var/lib/grafana
       - ./00-gitrepo-sample-full-observability-demo/graphana-dashboard/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
     networks:
       - monitoring-network
@@ -370,16 +483,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Promtail (Log Aggregation)
+  # Promtail (Log Aggregation) - Production Configuration
   promtail:
     image: grafana/promtail:latest
-    container_name: purely_promtail
+    container_name: purely_promtail_prod
     restart: unless-stopped
     ports:
       - "9080:9080"
     volumes:
-      - ./prometheus/promtail-config.yml:/etc/promtail/config.yml
+      - ./prometheus/promtail-config-ec2-prod.yml:/etc/promtail/config.yml
       - /var/log:/var/log
     command:
       - '-config.file=/etc/promtail/config.yml'
@@ -390,16 +509,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
-  # Blackbox Exporter
+  # Blackbox Exporter - Production Configuration
   blackbox-exporter:
     image: prom/blackbox-exporter:latest
-    container_name: purely_blackbox_exporter
+    container_name: purely_blackbox_exporter_prod
     restart: unless-stopped
     ports:
       - "9115:9115"
     volumes:
-      - ./prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml
+      - ./prometheus/blackbox-ec2-prod.yml:/etc/blackbox_exporter/config.yml
     command:
       - '--config.file=/etc/blackbox_exporter/config.yml'
     networks:
@@ -410,11 +535,17 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
 
-  # Node Exporter
+  # Node Exporter - Production Configuration
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: purely_node_exporter
+    container_name: purely_node_exporter_prod
     restart: unless-stopped
     ports:
       - "9100:9100"
@@ -433,29 +564,17 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Nginx Exporter
-  # nginx-exporter:
-  #   image: nginx/nginx-prometheus-exporter:latest
-  #   container_name: purely_nginx_exporter
-  #   restart: unless-stopped
-  #   ports:
-  #     - "9113:9113"
-  #   command:
-  #     - -nginx.scrape-uri=http://nginx:80/nginx_status
-  #   networks:
-  #     - monitoring-network
-  #     - frontend-network
-  #   healthcheck:
-  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9113/metrics"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
 
 volumes:
-  mongodb_data:
+  mongodb_data_prod:
     driver: local
-  prometheus_data:
+  prometheus_data_prod:
     driver: local
-  grafana_data:
+  grafana_data_prod:
     driver: local 

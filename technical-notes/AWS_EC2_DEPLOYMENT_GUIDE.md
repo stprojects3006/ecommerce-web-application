@@ -4,6 +4,37 @@
 
 This guide provides comprehensive instructions for deploying the PURELY E-commerce application on AWS EC2 in a production environment with enhanced security, monitoring, and performance optimizations.
 
+## 🚀 One-Command Automated Production Deployment
+
+### Step 1: Prepare the Environment
+```bash
+# Clone the repository
+git clone <your-repository-url>
+cd ecommerce-web-application
+
+# Make the setup script executable
+chmod +x setup-ec2-prod.sh
+```
+
+### Step 2: Run the Automated Setup Script
+```bash
+# Run the setup script with your domain and email
+sudo ./setup-ec2-prod.sh affluenceit.com your-email@domain.com
+```
+
+- This script will:
+  - Generate a production .env file with your domain and CORS settings
+  - Generate a production Nginx SSL config with your domain and CORS
+  - Generate a Prometheus config with your domain in all targets
+  - Call the SSL setup script to provision Let's Encrypt certificates
+  - Call the deployment script to build and start all services
+  - Print a summary and next steps
+
+### Step 3: Access Your Application
+- Visit: https://affluenceit.com
+
+---
+
 ## 📋 Production Environment Details
 
 ### EC2 Instance Configuration
@@ -14,56 +45,83 @@ This guide provides comprehensive instructions for deploying the PURELY E-commer
 - **Operating System**: Ubuntu 20.04 LTS
 - **Storage**: 20GB EBS volume
 
-### Production File Structure
-The production deployment uses separate configuration files with the `-ec2-prod` suffix to isolate production settings from development:
+### Security Group Configuration
+Configure your EC2 security group with the following inbound rules:
+
+| Type | Protocol | Port Range | Source | Description |
+|------|----------|------------|--------|-------------|
+| SSH | TCP | 22 | Your IP | SSH access |
+| HTTP | TCP | 80 | 0.0.0.0/0 | Web traffic |
+| HTTPS | TCP | 443 | 0.0.0.0/0 | Secure web traffic |
+| Custom TCP | TCP | 8081 | 0.0.0.0/0 | API Gateway |
+| Custom TCP | TCP | 8761 | 0.0.0.0/0 | Service Registry |
+| Custom TCP | TCP | 9090 | 0.0.0.0/0 | Prometheus |
+| Custom TCP | TCP | 3000 | 0.0.0.0/0 | Grafana |
+
+### System Requirements
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install required packages
+sudo apt install -y docker.io docker-compose openjdk-17-jdk curl wget git
+
+# Start and enable Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add user to docker group
+sudo usermod -aG docker $USER
+
+# Install Node.js for frontend build
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Logout and login again for docker group to take effect
+exit
+# SSH back in
+ssh -i your-key.pem ubuntu@18.217.148.69
+```
+
+---
+
+## 🔧 What the Automated Script Does
+
+- **Generates .env**: All URLs, CORS, and ports are set for your domain.
+- **Generates Nginx SSL Config**: CORS and proxy settings for your domain, SSL paths for Let's Encrypt.
+- **Generates Prometheus Config**: All monitoring targets use your domain.
+- **Runs SSL Setup**: Provisions Let's Encrypt certificates for your domain.
+- **Runs Deployment**: Builds and starts all services with production settings.
+- **Idempotent**: Safe to re-run if you need to update domain/email or regenerate configs.
+
+---
+
+## 🛠️ Troubleshooting
+- If you need to update your domain or email, simply re-run the setup script with new values.
+- If you encounter issues with SSL, check the output of the SSL setup script and ensure your domain's DNS is pointed to your EC2 instance.
+- For more details, see the troubleshooting guide in `technical-notes/TROUBLESHOOTING_GUIDE.md`.
+
+---
+
+## 📁 File Structure (After Automation)
 
 ```
 ecommerce-web-application/
-├── docker-compose-ec2-prod.yml          # Production Docker Compose
-├── nginx-ssl-ec2-prod.conf              # Production Nginx SSL config
-├── env-ec2-prod.example                 # Production environment template
-├── deploy-ec2-prod.sh                   # Production deployment script
-├── ssl-setup-ec2-prod.sh                # Production SSL setup
-└── technical-notes/
-    ├── AWS_EC2_DEPLOYMENT_GUIDE.md      # This guide
-    ├── SSL_SETUP_GUIDE.md               # SSL configuration
-    └── TROUBLESHOOTING_GUIDE.md         # Troubleshooting
+├── .env                        # Generated for production
+├── nginx-ssl-ec2-prod.conf     # Generated for production
+├── prometheus/
+│   └── prometheus-ec2-prod.yml # Generated for production
+├── setup-ec2-prod.sh           # One-command setup script
+├── ssl-setup.sh                # SSL setup script (called by setup script)
+├── deploy.sh                   # Deployment script (called by setup script)
+└── ...
 ```
 
-## 🚀 Quick Production Deployment
+---
 
-### Step 1: Prepare Production Files
-```bash
-# Clone the repository
-git clone <your-repository-url>
-cd ecommerce-web-application
-
-# Make scripts executable
-chmod +x deploy-ec2-prod.sh
-chmod +x ssl-setup-ec2-prod.sh
-chmod +x generate-selfsigned-cert.sh
-```
-
-### Step 2: Set Up Environment
-```bash
-# Copy production environment template
-cp env-ec2-prod.example .env
-
-# Edit environment variables for production
-nano .env
-```
-
-### Step 3: Build Application
-```bash
-# Build all services for production
-./build.sh
-```
-
-### Step 4: Deploy to Production
-```bash
-# Deploy with production configuration
-sudo ./deploy-ec2-prod.sh
-```
+## 📝 Notes
+- You no longer need to manually rename or copy production files. The setup script handles all configuration and deployment steps for you.
+- Always keep your secrets and credentials secure. Update the generated .env file with strong passwords and secrets before deploying to production.
 
 ## 🔧 Detailed Production Setup
 
