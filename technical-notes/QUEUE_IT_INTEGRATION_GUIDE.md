@@ -6,29 +6,6 @@ This guide covers the complete integration of Queue-it's virtual waiting room wi
 
 ## 🧪 Functional Test Cases
 
-All test cases are located in `testing-projects/queueit-functional-testing/`.
-
-| Category         | Test File/Location                                      | Description |
-|-----------------|---------------------------------------------------------|-------------|
-| **Backend**     | `tests/backend/test_queueit_api.py`                     | API health, status, enqueue, stats, error handling |
-|                 | `tests/backend/test_queueit_official_connector.py`      | Official Queue-It Java connector validation |
-| **Frontend**    | `tests/frontend/test_queueit_frontend.py`               | Service init, overlay, indicator, token, mobile, error |
-|                 | `tests/frontend/test_queueit_frontend_official.js`      | Official JS connector, event handling, redirect, token validation |
-| **Integration** | `tests/integration/test_queueit_integration.py`         | End-to-end queue flow, token lifecycle, error recovery |
-| **Performance** | `tests/performance/test_queueit_performance.py`         | Load, stress, memory, response time, throughput |
-| **Quick Test**  | `simple_functional_test.py`                             | Health, status, enqueue, endpoints, error handling |
-| **Test Runner** | `test.sh`, `run_queueit_tests.sh`, `generate_metrics.sh`| One-command and comprehensive test runners |
-
-**Descriptions:**
-- **Health Check:** Verifies API Gateway and Queue-It service health
-- **Queue Status:** Checks if queue is active for events
-- **Enqueue:** Simulates user joining the queue
-- **API Endpoints:** Validates all backend endpoints
-- **Overlay/Indicator:** Ensures UI components display and update correctly
-- **Mobile/Responsive:** Tests overlay on various devices
-- **Performance:** Simulates high load and concurrent users
-- **Error Handling:** Tests invalid events, network errors, and recovery
-
 ## 📋 Features Implemented
 
 ### ✅ Frontend Integration
@@ -143,8 +120,8 @@ export REACT_APP_QUEUE_IT_ENABLED=true
 export QUEUE_IT_ENABLED=true
 
 # Build and deploy
-./build.sh
-./deploy.sh
+zz-automationscripts/build.sh
+zz-automationscripts/deploy.sh
 ```
 
 ### 2. Test Queue Integration
@@ -574,7 +551,6 @@ location /api/queueit/ {
 - [Queue-It Official Documentation](https://queue-it.com/docs)
 - [Grafana Documentation](https://grafana.com/docs/)
 - [Prometheus Documentation](https://prometheus.io/docs/)
-- See `testing-projects/queueit-functional-testing/README.md` for more
 
 ---
 

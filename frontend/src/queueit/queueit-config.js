@@ -1,9 +1,10 @@
 // Queue-it Configuration for PURELY E-commerce Application
 export const QUEUE_IT_CONFIG = {
   // Queue-it Account Configuration
-  customerId: process.env.REACT_APP_QUEUE_IT_CUSTOMER_ID || 'futuraforge',
-  secretKey: process.env.REACT_APP_QUEUE_IT_SECRET_KEY || 'your-secret-key',
-  apiKey: process.env.REACT_APP_QUEUE_IT_API_KEY || 'your-api-key',
+  customerId: 'futuraforge',
+  secretKey: process.env.REACT_APP_QUEUE_IT_SECRET_KEY || '62cc5b6d-cad7-44c5-88a2-34fa78f73b767c7dcee7-5e81-44c4-93ea-0990c14f3176',
+  apiKey: process.env.REACT_APP_QUEUE_IT_API_KEY || '4607e3f0-dcb2-4714-9570-45d7e662c45f',
+  queueDomain: 'your-actual-queue-domain.queue-it.net',
   
   // Queue Settings
   isEnqueueTokenEnabled: true,

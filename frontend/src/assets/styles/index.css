@@ -11,12 +11,13 @@
   text-decoration: none;
 }
 :root {
-  --body: #EFF0F3;
-  --primary: #056046;
-  --secondary: #f1a0a0;
-  --ternary: #eccb9a;
-  --light: #ABD1C6;
-  --black: rgb(0, 0, 0);
+  --primary: #bfa14a;
+  --secondary: #f5f5f5;
+  --ternary: #f9f6ef;
+  --body: #f5f5f5;
+  --light: #fff;
+  --black: #222;
+  --gold: #bfa14a;
 }
 ::selection {
   background-color: var(--primary);
@@ -26,8 +27,10 @@ main {
   width: 100%;
   height: 100vh;
 }
-body{
-  background-color: var(--body);
+body {
+  background: var(--body);
+  color: var(--black);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 .flex-center {
   display: flex;
@@ -35,20 +38,47 @@ body{
   justify-content: center;
   flex-direction: column;
 }
-button {
-  background-color: transparent;
-  font-size: 16px;
-  border: 2px solid var(--primary);
-  border-radius: 3px;
+button, .btn {
+  background: var(--gold);
+  color: var(--body);
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s;
   cursor: pointer;
-  margin-top: 10px;
-  padding: 10px;
-  transition: 0.3s;
-  color: var(--primary);
 }
-button:hover{
-  background-color: var(--primary);color: var(--body);
+button:hover, .btn:hover {
+  background: #fff8e1;
+  color: var(--gold);
+  border: 1px solid var(--gold);
 }
 button:active{
   scale: 0.98;
+}
+input, select, textarea {
+  border: 1.5px solid var(--gold);
+  border-radius: 4px;
+  padding: 8px 12px;
+  background: #fff;
+  color: var(--black);
+  font-size: 1rem;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px #fff8e1;
+}
+.gold-theme {
+  background: linear-gradient(135deg, #f5f5f5 0%, #fff8e1 100%);
+}
+.gold-card {
+  background: var(--secondary);
+  border: 2px solid var(--gold);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(191,161,74,0.08);
+  padding: 32px 24px;
+  margin: 40px auto;
+  max-width: 400px;
 }

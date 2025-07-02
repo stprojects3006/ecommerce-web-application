@@ -3,18 +3,9 @@ import API_BASE_URL from "./apiConfig";
 import axios from 'axios';
 
 function CartService() {
-    // Initialize cart from localStorage if present
-    const getInitialCart = () => {
-        const storedCart = localStorage.getItem("cart");
-        return storedCart ? JSON.parse(storedCart) : {};
-    }
-    const [cart, setCart] = useState(getInitialCart())
+    const [cart, setCart] = useState({})
     const [cartError, setError] = useState(false);
     const [isProcessingCart, setProcessing] = useState(false);
-
-    const saveCartToLocalStorage = (cartObj) => {
-        localStorage.setItem("cart", JSON.stringify(cartObj));
-    }
 
     const authHeader = () => {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -35,7 +26,7 @@ function CartService() {
                 setError(true)
             })
         setProcessing(false)
-        await getCartInformation()
+        getCartInformation()
     }
 
     const updateItemQuantity = async (productId, quantity) => {
@@ -52,7 +43,7 @@ function CartService() {
                 setError(true)
             })
         setProcessing(false)
-        await getCartInformation()
+        getCartInformation()
     }
 
     const removeItemFromCart = async (productId) => {
@@ -69,10 +60,11 @@ function CartService() {
             .catch((error) => {
                 setError(true)
             })
-        await getCartInformation()
+        getCartInformation()
     }
 
     const clearCart = async () => {
+        console.log("Starting cart clear process...")
         setProcessing(true)
         try {
             const response = await axios.delete(`${API_BASE_URL}/cart-service/cart/clear/byId`, {
@@ -81,21 +73,27 @@ function CartService() {
                     id: cart.cartId
                 }
             });
+            
+            console.log("Cart clear response:", response.data)
             setError(false)
             setCart({cartItems: [], noOfCartItems: 0, subtotal: 0})
-            saveCartToLocalStorage({cartItems: [], noOfCartItems: 0, subtotal: 0})
+            console.log("Cart state updated locally")
+            
+            // Refresh cart information to ensure state is updated
             await getCartInformation()
+            console.log("Cart information refreshed")
         } catch (error) {
+            console.error("Failed to clear cart:", error)
             setError(true)
         }
         setProcessing(false)
+        console.log("Cart clear process completed")
     }
 
     const getCartInformation = async () => {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user?.token) {
             setCart({})
-            saveCartToLocalStorage({})
             setError(false)
             return
         }
@@ -106,11 +104,9 @@ function CartService() {
             .then((response) => {
                 setError(false)
                 setCart(response.data.response)
-                saveCartToLocalStorage(response.data.response)
             })
             .catch((error) => {
                 setCart({cartItems:[]})
-                saveCartToLocalStorage({cartItems:[]})
                 setError(true)
             })
         setProcessing(false)
@@ -120,12 +116,8 @@ function CartService() {
         getCartInformation()
     }, [])
 
-    // Also update localStorage whenever cart changes (for manual updates)
-    useEffect(() => {
-        saveCartToLocalStorage(cart)
-    }, [cart])
-
     return { cart, cartError, isProcessingCart, addItemToCart, updateItemQuantity, removeItemFromCart, clearCart, getCartInformation };
+
 }
 
 export default CartService;

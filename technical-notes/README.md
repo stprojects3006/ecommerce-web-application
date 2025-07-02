@@ -57,14 +57,6 @@ This directory contains comprehensive technical documentation for the PURELY e-c
    - Queue-it configuration and setup
    - Frontend and backend integration
 
-### 📊 Testing and Performance
-
-9. **[testing-projects/](../testing-projects/)**
-   - Load testing frameworks and configurations
-   - Performance testing tools
-   - JMeter test plans
-   - Selenium-based testing
-
 ### 🔍 Observability and Monitoring
 
 10. **[00-gitrepo-sample-full-observability-demo/](./00-gitrepo-sample-full-observability-demo/)**
@@ -87,8 +79,6 @@ This directory contains comprehensive technical documentation for the PURELY e-c
 
 ### For High-Traffic Events
 1. Implement Queue-it with **[QUEUE_IT_INTEGRATION_GUIDE.md](./QUEUE_IT_INTEGRATION_GUIDE.md)**
-2. Set up load testing from **[testing-projects/](../testing-projects/)**
-3. Monitor performance with observability tools
 
 ### For Troubleshooting
 1. Check **[TROUBLESHOOTING_GUIDE.md](./TROUBLESHOOTING_GUIDE.md)** for common issues
@@ -313,7 +303,7 @@ This guide is compatible with **Grafana 10.x** (recommended). UI options may dif
 
 - For new developers: Start with [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)
 - For production: See [AWS_EC2_DEPLOYMENT_GUIDE.md](./AWS_EC2_DEPLOYMENT_GUIDE.md) and [SSL_SETUP_GUIDE.md](./SSL_SETUP_GUIDE.md)
-- For high-traffic events: See [QUEUE_IT_INTEGRATION_GUIDE.md](./QUEUE_IT_INTEGRATION_GUIDE.md) and [testing-projects/](../testing-projects/)
+- For high-traffic events: See [QUEUE_IT_INTEGRATION_GUIDE.md](./QUEUE_IT_INTEGRATION_GUIDE.md)
 - For troubleshooting: See [TROUBLESHOOTING_GUIDE.md](./TROUBLESHOOTING_GUIDE.md) and [PORT_SETUP_GUIDE.md](./PORT_SETUP_GUIDE.md)
 
 ## 🛠️ Environment-Specific Configurations

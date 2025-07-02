@@ -1,0 +1,37 @@
+.event-header {
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 12px 5%;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  margin-bottom: 20px;
+  justify-content: space-between;
+}
+.event-home-link {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.event-home-link:hover {
+  color: #667eea;
+}
+.event-cart-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.event-cart-icon:hover {
+  color: #667eea;
+}
+.event-cart-icon i {
+  font-size: 1.3rem;
+} 

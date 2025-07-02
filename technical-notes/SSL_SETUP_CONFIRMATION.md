@@ -26,7 +26,7 @@ mkdir -p ssl && openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 3. SSL Configuration Files ✅
 - **`nginx-ssl.conf`**: Pre-configured nginx configuration with SSL support
 - **`ssl/` directory**: Contains the generated certificates
-- **SSL scripts available**: `ssl-setup.sh` and `generate-selfsigned-cert.sh` (but we used manual generation)
+- **SSL scripts available**: `zz-automationscripts/ssl-setup.sh` and `zz-automationscripts/generate-selfsigned-cert.sh` (but we used manual generation)
 
 SSL Architecture:
 ```

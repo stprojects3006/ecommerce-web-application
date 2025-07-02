@@ -32,7 +32,7 @@ scrape_configs:
   # Auth Service
   - job_name: 'auth-service'
     static_configs:
-      - targets: ['auth-service:8081']
+      - targets: ['auth-service:9030']
     metrics_path: '/actuator/prometheus'
 
   # Category Service

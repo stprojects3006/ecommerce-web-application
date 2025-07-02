@@ -25,13 +25,13 @@ nano .env
 ### 3. Build the Application
 ```bash
 # Build all microservices and frontend
-./build.sh
+./zz-automationscripts/build.sh
 ```
 
 ### 4. Deploy the Application
 ```bash
 # Deploy using pre-built artifacts
-./deploy.sh
+./zz-automationscripts/deploy.sh
 ```
 
 ## Service Architecture
@@ -105,10 +105,10 @@ The build script automatically:
 
 ```bash
 # Build the application
-./build.sh
+./zz-automationscripts/build.sh
 
 # Deploy the application
-./deploy.sh
+./zz-automationscripts/deploy.sh
 
 # View logs
 docker-compose logs -f
@@ -148,7 +148,7 @@ docker-compose ps
 ## Troubleshooting
 
 1. **Build failures**: Check Maven and Node.js installation
-2. **JAR files missing**: Run `./build.sh` first
+2. **JAR files missing**: Run `./zz-automationscripts/build.sh` first
 3. **Services not starting**: Check logs with `docker-compose logs service-name`
 4. **Database issues**: Ensure MongoDB is running and accessible
 5. **Email notifications**: Configure email settings in .env file

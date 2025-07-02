@@ -499,8 +499,8 @@ docker-compose down --remove-orphans
 docker system prune -f
 
 # Rebuild everything
-./build.sh
-./deploy.sh
+zz-automationscripts/build.sh
+zz-automationscripts/deploy.sh
 ```
 
 ### **Service-Specific Reset:**

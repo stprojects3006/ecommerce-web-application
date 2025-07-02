@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="250" viewBox="0 0 600 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Transparent Background -->
+  <!-- AFLOW and slogan: center aligned, visible on light background -->
+  <text id="aflow" x="50%" y="180" text-anchor="middle" font-family="'Playfair Display', serif" font-size="120" font-weight="bold" fill="#bfa14a" letter-spacing="18" stroke="#fff" stroke-width="2">AFLOW</text>
+  <text x="50%" y="225" text-anchor="middle" font-family="'Pacifico', cursive" font-size="44" fill="#222" letter-spacing="2" style="font-style: italic;">Your Gateway to Abundance</text>
+</svg> 

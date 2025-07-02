@@ -19,11 +19,11 @@ For development and testing environments:
 
 ```bash
 # Make scripts executable
-chmod +x ssl-setup.sh
-chmod +x generate-selfsigned-cert.sh
+chmod +x zz-automationscripts/ssl-setup.sh
+chmod +x zz-automationscripts/generate-selfsigned-cert.sh
 
 # Generate self-signed certificate
-sudo ./generate-selfsigned-cert.sh 18.217.148.69
+sudo ./zz-automationscripts/generate-selfsigned-cert.sh 18.217.148.69
 
 # Create SSL directory for Docker (if not exists)
 mkdir -p ssl
@@ -44,7 +44,7 @@ For production environments with a domain name:
 
 ```bash
 # Run the SSL setup script
-sudo ./ssl-setup.sh yourdomain.com your-email@example.com
+sudo ./zz-automationscripts/ssl-setup.sh yourdomain.com your-email@example.com
 
 # Update docker-compose.yml to use Let's Encrypt certificates
 # Uncomment the Let's Encrypt volume mounts in nginx service
@@ -60,7 +60,7 @@ sudo ./ssl-setup.sh yourdomain.com your-email@example.com
 #### Step 1: Generate Self-Signed Certificate
 ```bash
 # Run the certificate generator
-sudo ./generate-selfsigned-cert.sh 18.217.148.69
+sudo ./zz-automationscripts/generate-selfsigned-cert.sh 18.217.148.69
 ```
 
 #### Step 2: Prepare for Docker
@@ -111,7 +111,7 @@ ping yourdomain.com
 #### Step 2: Run SSL Setup Script
 ```bash
 # Run the comprehensive SSL setup
-sudo ./ssl-setup.sh yourdomain.com your-email@example.com
+sudo ./zz-automationscripts/ssl-setup.sh yourdomain.com your-email@example.com
 ```
 
 #### Step 3: Update Docker Configuration

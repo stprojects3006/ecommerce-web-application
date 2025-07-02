@@ -72,6 +72,15 @@ function Header() {
                     <li>
                         <Link to="/products/All" className="nav-link">Products</Link>
                     </li>
+                    <li className="nav-link queue-events-dropdown">
+                        <span>Offers / Events</span>
+                        <ul className="queue-events-menu">
+                            <li><Link to="/flash-sale" className="nav-link">Flash Sale</Link></li>
+                            <li><Link to="/black-friday" className="nav-link">Black Friday</Link></li>
+                            <li><Link to="/products/All" className="nav-link">High Traffic (Products)</Link></li>
+                            <li><Link to="/order/checkout" className="nav-link">Checkout Queue</Link></li>
+                        </ul>
+                    </li>
                     {!user && (
                         <li>
                             <Link to="/auth/login" className="nav-link">Login</Link>

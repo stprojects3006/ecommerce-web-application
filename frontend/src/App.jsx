@@ -7,6 +7,7 @@ import CartContext from "./contexts/cart.contect";
 import { QueueItProvider } from "./queueit/queueit-context";
 import QueueOverlay from "./queueit/components/QueueOverlay";
 import QueueIndicator from "./queueit/components/QueueIndicator";
+import QueueItIntegrationTest from './components/queueit/QueueItIntegrationTest';
 
 function App() {
 
@@ -19,6 +20,7 @@ function App() {
         <AuthContext.Provider value={{user, toggleUser}}>
           <CartContext.Provider value={{ cart, cartError, isProcessingCart, addItemToCart, removeItemFromCart, clearCart, getCartInformation }}>
             <AppRoutes/>
+            <QueueItIntegrationTest />
             <QueueOverlay />
             <QueueIndicator />
           </CartContext.Provider>

@@ -38,7 +38,6 @@ Backend Integration
 
 🧪 Functional Test Cases
 =========================================
-All test cases are located in `testing-projects/queueit-functional-testing/`.
 
 | Category         | Test File/Location                                      | Description |
 |-----------------|---------------------------------------------------------|-------------|
@@ -71,8 +70,8 @@ export REACT_APP_QUEUE_IT_ENABLED=true
 export QUEUE_IT_ENABLED=true
 
 # Build and deploy
-./build.sh
-./deploy.sh
+zz-automationscripts/build.sh
+zz-automationscripts/deploy.sh
 
 2. Test the Integration    
 ---------------------------------

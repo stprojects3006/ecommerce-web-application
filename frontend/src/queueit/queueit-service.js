@@ -87,40 +87,22 @@ class QueueItService {
 
   // Check if queue is active for an event
   async checkQueueStatus(eventId) {
-    try {
-      const response = await fetch(`/api/queueit/status/${eventId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Queue status check error:', error);
-      // If we can't check status, assume queue is not active
-      return { isActive: false };
-    }
+    return { isActive: true };
   }
 
   // Join the queue
   async joinQueue(eventConfig) {
     try {
-      const response = await fetch('/api/queueit/enqueue', {
+      // Use /api/queueit/validate instead of /enqueue
+      const response = await fetch('/api/queueit/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           eventId: eventConfig.eventId,
-          customerId: QUEUE_IT_CONFIG.customerId,
-          targetUrl: window.location.href,
-          userAgent: navigator.userAgent,
-          ipAddress: await this.getClientIP(),
+          queueitToken: this.getQueueToken(),
+          originalUrl: window.location.href,
         }),
       });
 
@@ -130,63 +112,25 @@ class QueueItService {
 
       const result = await response.json();
       
-      if (result.redirectUrl) {
+      if (result.redirect && result.redirectUrl) {
         // Redirect to Queue-it
         window.location.href = result.redirectUrl;
-      } else if (result.queueToken) {
-        // Store queue token and wait
-        this.queueToken = result.queueToken;
+      } else if (result.queueId) {
+        // Store queueId as token and set status
+        this.queueToken = result.queueId;
         this.status = QUEUE_STATUS.QUEUED;
-        this.storeQueueToken(result.queueToken);
+        this.storeQueueToken(result.queueId);
         this.notifyListeners();
-        
-        // Start polling for queue position
-        this.startQueuePolling(eventConfig.eventId);
+        // No polling for position, just wait for redirect or manual refresh
+      } else {
+        // If no queue, allow access
+        this.status = QUEUE_STATUS.ENTERED;
+        this.notifyListeners();
       }
     } catch (error) {
       console.error('Join queue error:', error);
       this.handleError(QUEUE_ERRORS.NETWORK_ERROR, error);
     }
-  }
-
-  // Poll queue position
-  startQueuePolling(eventId) {
-    this.pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/queueit/position/${eventId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.queueToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (result.redirectUrl) {
-          // User can enter the site
-          clearInterval(this.pollInterval);
-          this.status = QUEUE_STATUS.ENTERED;
-          this.clearQueueToken();
-          this.notifyListeners();
-          window.location.href = result.redirectUrl;
-        } else {
-          // Update queue position
-          this.notifyListeners({
-            type: 'position_update',
-            position: result.position,
-            estimatedWaitTime: result.estimatedWaitTime,
-          });
-        }
-      } catch (error) {
-        console.error('Queue polling error:', error);
-        this.handleError(QUEUE_ERRORS.NETWORK_ERROR, error);
-      }
-    }, 5000); // Poll every 5 seconds
   }
 
   // Get client IP address
@@ -315,9 +259,6 @@ class QueueItService {
 
   // Cleanup
   cleanup() {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-    }
     this.listeners = [];
   }
 }

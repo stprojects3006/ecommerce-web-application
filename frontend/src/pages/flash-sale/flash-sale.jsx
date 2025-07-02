@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useQueueStatus, useQueueActions } from '../../queueit/queueit-context';
 import { QUEUE_EVENTS } from '../../queueit/queueit-config';
 import './flash-sale.css';
+import EventHeader from '../../components/header/EventHeader';
+import CartContext from '../../contexts/cart.contect';
+import { AuthContext } from '../../contexts/auth.context';
+import { useNavigate } from 'react-router-dom';
+import Info from '../../components/info/info';
 
 const FlashSale = () => {
   const { isQueuing, isQueued, isEntered, position, estimatedWaitTime } = useQueueStatus();
   const { triggerQueue, bypassQueue } = useQueueActions();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addItemToCart } = useContext(CartContext);
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [cartMessage, setCartMessage] = useState("");
 
   useEffect(() => {
     // Simulate loading flash sale products
@@ -70,6 +79,16 @@ const FlashSale = () => {
     bypassQueue();
   };
 
+  const handleAddToCart = (product) => {
+    if (!user) {
+      navigate('/auth/login');
+      return;
+    }
+    addItemToCart(product.id, 1);
+    setCartMessage(`${product.name} added to cart!`);
+    setTimeout(() => setCartMessage(""), 2000);
+  };
+
   if (loading) {
     return (
       <div className="flash-sale-container">
@@ -83,6 +102,8 @@ const FlashSale = () => {
 
   return (
     <div className="flash-sale-container">
+      <EventHeader />
+      {cartMessage && <Info message={cartMessage} />}
       <div className="flash-sale-header">
         <h1>🔥 FLASH SALE 🔥</h1>
         <p className="sale-description">
@@ -115,26 +136,24 @@ const FlashSale = () => {
       </div>
 
       {/* Development Controls */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="dev-controls">
-          <h3>Development Controls</h3>
-          <div className="control-buttons">
-            <button 
-              className="trigger-queue-btn"
-              onClick={handleTriggerQueue}
-              disabled={isQueuing || isQueued}
-            >
-              Trigger Queue
-            </button>
-            <button 
-              className="bypass-queue-btn"
-              onClick={handleBypassQueue}
-            >
-              Bypass Queue
-            </button>
-          </div>
+      <div className="dev-controls">
+        <h3>Development Controls</h3>
+        <div className="control-buttons">
+          <button 
+            className="trigger-queue-btn"
+            onClick={handleTriggerQueue}
+            disabled={isQueuing || isQueued}
+          >
+            Trigger Queue
+          </button>
+          <button 
+            className="bypass-queue-btn"
+            onClick={handleBypassQueue}
+          >
+            Bypass Queue
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Products Grid */}
       <div className="products-grid">
@@ -160,6 +179,7 @@ const FlashSale = () => {
               <button 
                 className="add-to-cart-btn"
                 disabled={product.stock === 0}
+                onClick={() => handleAddToCart(product)}
               >
                 {product.stock > 0 ? 'Add to Cart' : 'Sold Out'}
               </button>

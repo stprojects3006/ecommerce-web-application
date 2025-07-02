@@ -17,33 +17,9 @@ const CheckoutForm = () => {
         placeOrder(data, cart.cartId, clearCart)
     };
 
-    // Show error or empty cart message
-    if (cartError) {
-        return (
-            <div className="checkout-container">
-                <h1>Checkout</h1>
-                <div className="checkout-wrapper">
-                    <p style={{color: 'red'}}>Unable to load your cart. Please try again or return to the shop.</p>
-                    <Link to="/products/All"><button>Return to Shop</button></Link>
-                </div>
-            </div>
-        );
-    }
-    if (!cart?.cartItems || cart.cartItems.length === 0) {
-        return (
-            <div className="checkout-container">
-                <h1>Checkout</h1>
-                <div className="checkout-wrapper">
-                    <p>Your cart is empty.</p>
-                    <Link to="/products/All"><button>Return to Shop</button></Link>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <>
-            <header className='app-header'><Logo /></header>
+            <header className='app-header'><Logo /> <Link to="/" style={{marginLeft: '20px', color: '#bfa14a', fontWeight: 600, textDecoration: 'none'}}>Home</Link></header>
             <div className="checkout-container">
                 <h1>Checkout</h1>
                 <div className='checkout-wrapper'>

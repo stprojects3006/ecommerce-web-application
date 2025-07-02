@@ -41,7 +41,7 @@ echo ""
 echo "🔧 AWS EC2 Deployment Notes:"
 echo "  - Your deploy.sh script includes all the fixes we implemented"
 echo "  - No additional changes needed for EC2 deployment"
-echo "  - Just run: ./deploy.sh on your EC2 instance"
+echo "  - Just run: ./zz-automationscripts/deploy.sh on your EC2 instance"
 echo ""
 
 echo "📁 Files created:"

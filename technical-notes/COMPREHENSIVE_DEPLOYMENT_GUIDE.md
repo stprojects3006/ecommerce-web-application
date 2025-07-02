@@ -62,10 +62,10 @@ The application includes comprehensive deployment scripts:
 
 ```bash
 # Full deployment (builds and starts everything)
-./deploy.sh
+./zz-automationscripts/deploy.sh
 
 # Build JARs only
-./build-jars-only.sh
+./zz-automationscripts/build-jars-only.sh
 
 # Build frontend only
 cd frontend && npm run build
@@ -74,7 +74,7 @@ cd frontend && npm run build
 ### Manual Deployment Steps
 1. **Build Microservices**:
    ```bash
-   ./build-jars-only.sh
+   ./zz-automationscripts/build-jars-only.sh
    ```
 
 2. **Build Frontend**:
@@ -298,7 +298,7 @@ location /api/ {
    cd ecommerce-web-application
 
    # Run deployment script
-   ./deploy.sh
+   ./zz-automationscripts/deploy.sh
    ```
 
 ### Production Considerations

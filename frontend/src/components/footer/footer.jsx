@@ -8,7 +8,7 @@ function Footer() {
         <>
             <footer>
                 <div>
-                    <h1>News letter</h1>
+                    <h1>Newsletter</h1>
                     <p>Stay tuned with us!</p>
                     <input type='text' placeholder='Enter your email'/>
                     <button>Submit</button>
@@ -24,9 +24,9 @@ function Footer() {
                 <div>
                     <h1>Contact Us</h1>
                     <div>
-                        <p><span><i className="fa fa-map-marker"></i></span>No 123, Lotus strret, Colombo</p>
-                        <p><span><i className="fa fa-phone"></i></span>+94 741258963, 9632587412</p>
-                        <p><span><i className="fa fa-envelope"></i></span>bitebliss@abc.com</p>
+                        <p><span><i className="fa fa-map-marker"></i></span>Pimpri-Chinchwad, Maharashtra, India</p>
+                        <p><span><i className="fa fa-phone"></i></span>+27 82 123 4567</p>
+                        <p><span><i className="fa fa-envelope"></i></span>support@affluenceit.com</p>
                     </div>
                     <p>
                         <span><i className="fa fa-facebook"></i></span>

@@ -73,18 +73,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 400px;
 }
 .app-header input {
-    /* width: 400px; */
+    width: 400px;
+    min-width: 300px;
+    max-width: 600px;
     height: 100%;
-    /* min-width: 200px; */
-    flex: 1 1 250px;
+    flex: none;
     padding: 10px 3px 10px 10px;
     background-color: var(--light);
     border: none;
     outline: none;
-    border-radius: 3px 0 3 3px;
+    border-radius: 3px 0 3px 3px;
     color: var(--primary);
+    font-size: 1.1rem;
 }
 .app-header .search i {
     background-color: var(--light);
@@ -111,6 +114,70 @@
     width: 100%;
 }
 
+.queue-events-dropdown {
+    position: relative;
+}
+.queue-events-dropdown > span {
+    cursor: pointer;
+    padding: 10px;
+    font-size: 17px;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: bold;
+    background: linear-gradient(90deg, #fff8e1 0%, #bfa14a 100%);
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 8px rgba(191,161,74,0.08);
+    animation: flashGold 1.2s infinite alternate;
+}
+@keyframes flashGold {
+    0% { background: #fff8e1; color: #bfa14a; }
+    100% { background: #bfa14a; color: #fff; }
+}
+.queue-events-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff8e1;
+    border: 2px solid #bfa14a;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 32px rgba(191,161,74,0.12);
+    z-index: 10;
+    padding: 0;
+    margin: 0;
+}
+.queue-events-dropdown:hover .queue-events-menu {
+    display: block;
+}
+.queue-events-menu li, .queue-events-menu li a, .queue-events-menu .nav-link {
+    color: #bfa14a !important;
+    background: #fff !important;
+}
+.queue-events-menu li:hover, .queue-events-menu li a:hover, .queue-events-menu .nav-link:hover {
+    background: #bfa14a !important;
+    color: #fff !important;
+}
+.queue-events-menu li {
+    list-style: none;
+    padding: 14px 28px;
+    border-bottom: 1px solid #f9e7b3;
+    background: #fff;
+    font-weight: bold;
+    color: #bfa14a;
+    font-size: 1.1rem;
+    transition: background 0.2s, color 0.2s;
+    text-align: center;
+}
+.queue-events-menu li:last-child {
+    border-bottom: none;
+}
+.queue-events-menu .nav-link {
+    color: #bfa14a;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
 
 @media all and (max-width:900px) {
     .fa-times, .fa-bars {

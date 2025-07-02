@@ -35,3 +35,11 @@ management:
         export:
             prometheus:
                 enabled: true
+
+queueit:
+  customer-id: "futuraforge"
+  secret-key: "62cc5b6d-cad7-44c5-88a2-34fa78f73b767c7dcee7-5e81-44c4-93ea-0990c14f3176"
+  api-key: "4607e3f0-dcb2-4714-9570-45d7e662c45f"
+  queue-domain: your-actual-queue-domain.queue-it.net
+  enabled: true
+  debug: false

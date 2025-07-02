@@ -37,11 +37,25 @@
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
 		
-		<!-- Queue-It Java Connector -->
+		<!-- Queue-it KnownUser SDK -->
+		<dependency>
+			<groupId>com.queue-it.connector</groupId>
+			<artifactId>jakarta</artifactId>
+			<version>4.0.15</version>
+		</dependency>
+		
+		<!-- Queue-it Core SDK (contains RequestValidationResult and other core classes) -->
 		<dependency>
 			<groupId>com.queue-it</groupId>
-			<artifactId>queueit-connector-java</artifactId>
-			<version>4.3.2</version>
+			<artifactId>queueit-connector-core</artifactId>
+			<version>4.0.7</version>
+		</dependency>
+		
+		<!-- Gson for JSON processing -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10.1</version>
 		</dependency>
 		
 		<!-- JSON processing for Queue-It -->
@@ -50,12 +64,27 @@
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
 		
-		<!-- Temporarily commenting out actuator to debug servlet issue
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-		-->
+ 		<dependency>
+       		<groupId>io.micrometer</groupId>
+       	<artifactId>micrometer-registry-prometheus</artifactId>
+   </dependency>		
+
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>5.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>4.0.1</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -68,6 +97,14 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<!-- Azure DevOps Repository for Queue-it Connector -->
+	<repositories>
+		<repository>
+			<id>Connectors</id>
+			<url>https://pkgs.dev.azure.com/queue-it/Queue-it/_packaging/Connectors/maven/v1</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>
